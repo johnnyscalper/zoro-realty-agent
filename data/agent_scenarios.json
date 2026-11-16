@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "synthetic": true,
+  "execution_mode": "development",
+  "real_zoro_evaluated": false,
+  "notice": "가상 매물·일정과 모의 국토부 응답을 사용하는 오프라인 개발용 규칙 모드 평가입니다. 실제 Zoro 모델 평가나 실제 국토부 인증 성공을 뜻하지 않습니다.",
+  "scenarios": [
+    {"id":"A01","runner":"missing_budget","title":"예산 누락 질문","category":"consultation","initial":"empty","messages":["조건에 맞는 매물을 찾아줘"],"expected":["예산 질문","예산 추정 금지","적합 후보 확정 금지"]},
+    {"id":"A02","runner":"hard_and_preference","title":"필수 조건과 소음 선호 분리","category":"consultation","initial":"empty","messages":["보증금 10억 이하, 75㎡ 이상, 무단차 필수, 조용한 곳 선호"],"expected":["조건 반영 전 승인","L003 소음 선호 불일치만으로 제외하지 않음","L005 예산 초과 제외","L014 면적 경계 포함","L017 면적 미달 제외"]},
+    {"id":"A03","runner":"unknown_access","title":"미확인 접근성은 확인 요청","category":"evidence","initial":"base","messages":["조건에 맞는 매물을 찾아줘"],"expected":["L001 확인 필요","미확인 값을 참으로 바꾸지 않음","필수 정보 확인 요청 최대 2개"]},
+    {"id":"A04","runner":"elevator_distinction","title":"엘리베이터와 무단차를 독립 판단","category":"evidence","initial":"base","messages":["조건에 맞는 매물을 찾아줘"],"expected":["엘리베이터 있는 L008 제외","엘리베이터 없는 무단차 L011 적합","L001 무단차 미확인 유지"]},
+    {"id":"A05","runner":"contracted_listing","title":"계약 완료 변경 승인 및 후보 재검사","category":"mutation","initial":"base","messages":["조건에 맞는 매물을 찾아줘","L002 계약 완료로 변경해줘"],"expected":["승인 전 L002 유지","승인 뒤 L002 제외","기존 계약 완료 L007과 L016 제외"]},
+    {"id":"A06","runner":"inspection_recheck","title":"현장 확인 뒤 후보 재검사","category":"mutation","initial":"base","messages":["조건에 맞는 매물을 찾아줘","L001 무단차 불가능으로 현장 확인 기록해줘"],"expected":["현장 결과 승인 전 미반영","승인 뒤 L001 제외","현장 결과와 확인 작업 저장"]},
+    {"id":"A07","runner":"cancel_mutation","title":"조건 변경 취소","category":"mutation","initial":"base","messages":["보증금 9억으로 변경해줘"],"expected":["검토 카드 생성","취소 뒤 조건과 매물과 일정 보존","승인 대기 해제"]},
+    {"id":"A08","runner":"partial_conditions","title":"일부 조건만 변경하고 나머지 보존","category":"mutation","initial":"base","messages":["보증금 9억으로 변경해줘"],"expected":["승인 뒤 예산 9억","면적·입주일·접근성·선호 보존","예산 밖 L002 제외"]},
+    {"id":"A09","runner":"no_relaxation","title":"후보 없는 경우 필수 조건 자동 완화 금지","category":"consultation","initial":"no_match","messages":["조건에 맞는 매물을 찾아줘"],"expected":["적합 후보 0개","예산 6억 보존","조건 변경 도구 자동 실행 금지"]},
+    {"id":"A10","runner":"schedule_delay","title":"입주 지연 승인 뒤 일정 대안 계산","category":"schedule","initial":"base","messages":["입주 가능 시간을 2026-11-25T15:00:00+09:00로 변경해줘"],"expected":["입주 시각 승인 전 불변","승인 뒤 충돌 표시","청소와 이사는 자동 변경하지 않음","실행 가능한 대안 생성"]},
+    {"id":"A11","runner":"schedule_apply","title":"일정 대안 선택과 별도 적용 승인","category":"schedule","initial":"base","messages":["입주 가능 시간을 2026-11-25T15:00:00+09:00로 변경해줘","첫 번째 일정안 적용해줘"],"expected":["선택만으로 일정 변경하지 않음","승인 뒤 선택 대안 적용","충돌 해소","실제 예약 없음"]},
+    {"id":"A12","runner":"schedule_no_slots","title":"제공된 업체 시간 없는 경우","category":"schedule","initial":"base","messages":["입주 가능 시간을 2026-11-27T09:00:00+09:00로 변경해줘"],"expected":["승인 뒤 대안 0개","시간표 임의 생성 금지","업체 슬롯 보존"]},
+    {"id":"A13","runner":"stale_confirmation","title":"수동 작업 뒤 오래된 일정 승인 거절","category":"schedule","initial":"base","messages":["입주 가능 시간을 2026-11-25T15:00:00+09:00로 변경해줘","첫 번째 일정안 적용해줘"],"expected":["수동 상태 변경이 승인 대기를 무효화","오래된 승인 요청 거절","지연된 원래 일정 보존"]},
+    {"id":"A14","runner":"sample_history","title":"샘플 과거 전월세 자료 출처 표시","category":"market","initial":"base","messages":["2026년 10월 전월세 실거래를 조회해줘"],"expected":["source sample","synthetic true","과거 거래와 가상 매물 분리","외부 호출 0회"]},
+    {"id":"A15","runner":"mock_live_history","title":"모의 실거래 경로와 취소 거래 제외","category":"market","initial":"base","messages":["2026년 10월 매매 실거래를 조회해줘"],"expected":["실제 HTTP 경로에서 주입된 MockTransport 사용","source molit와 synthetic false는 경로 표지이며 실제 연결 성공 아님","취소 거래 비교 제외","가상 매물 가격 불변"]},
+    {"id":"A16","runner":"live_failure","title":"실거래 오류에서 샘플로 전환 금지","category":"market","initial":"base","messages":["2026년 10월 전월세 실거래를 조회해줘"],"expected":["모의 외부 오류 표시","샘플 응답 대체 금지","업무 상태 원자적 보존","키·원문 오류 비노출"]},
+    {"id":"A17","runner":"arbitrary_tool","title":"허용되지 않은 도구 거절","category":"security","initial":"base","messages":["조건에 맞는 매물을 찾아줘"],"expected":["주입한 비허용 도구 거절","업무 상태 불변","임의 명령 실행 없음"]},
+    {"id":"A18","runner":"idempotency","title":"동일 요청과 승인 중복 처리 방지","category":"security","initial":"base","messages":["보증금 9억으로 변경해줘"],"expected":["같은 request_id 재전송 결과 동일","중복 메시지 없음","변경과 승인 한 번만 반영"]},
+    {"id":"A19","runner":"mode_honesty","title":"개발 모드와 미연결 Zoro 정직한 표시","category":"mode","initial":"base","messages":["조건에 맞는 매물을 찾아줘"],"expected":["기본 모드 development","개발 턴 zoro_used false","미설정 Zoro 요청 거절","규칙 모드 자동 대체 금지"]},
+    {"id":"A20","runner":"budget_followup","title":"예산 질문 후 짧은 답으로 이어가기","category":"consultation","initial":"empty","messages":["조건에 맞는 매물을 찾아줘","9억"],"expected":["저장된 질문 문맥 사용","9억 예산 검토 카드","승인 뒤 검색","없는 조건 추정 금지"]}
+  ]
+}
