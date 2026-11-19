@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Mapping
 from urllib.parse import urlsplit
 import os
+import re
 
 from dotenv import dotenv_values
 
@@ -27,6 +28,7 @@ class Settings:
     app_host: str = "127.0.0.1"
     app_port: int = 8000
     state_db_path: Path = field(default_factory=lambda: PROJECT_ROOT / ".runtime" / "realty.sqlite3", repr=False)
+    codespace_host: str = field(default="", repr=False)
 
     @classmethod
     def from_env(cls, env: Mapping[str, str] | None = None) -> "Settings":
@@ -66,6 +68,13 @@ class Settings:
                     raise ValueError
             except ValueError:
                 raise ConfigurationError("ZORO_BASE_URL에 인증정보·쿼리가 없는 HTTP(S) 주소를 넣어주세요.") from None
+        codespace_host = ""
+        if text("CODESPACES") == "true":
+            name = text("CODESPACE_NAME")
+            domain = text("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN")
+            dns_label = r"[a-z0-9]+(?:-[a-z0-9]+)*"
+            if re.fullmatch(dns_label, name) and re.fullmatch(rf"(?:{dns_label}\.)+{dns_label}", domain):
+                codespace_host = f"{name}-{port}.{domain}"
         shared_key = text("MOLIT_API_KEY")
         model = text("ZORO_MODEL")
         if len(model) > 200 or any(ord(c) < 32 for c in model):
@@ -82,6 +91,7 @@ class Settings:
             zoro_base_url=zoro_url.rstrip("/"), zoro_api_key=text("ZORO_API_KEY"),
             zoro_model=model, zoro_timeout_seconds=zoro_timeout,
             molit_timeout_seconds=timeout, app_host=host, app_port=port,
+            codespace_host=codespace_host,
             state_db_path=Path(text("STATE_DB_PATH", str(PROJECT_ROOT / ".runtime" / "realty.sqlite3"))).expanduser().resolve(),
         )
 

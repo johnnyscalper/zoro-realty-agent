@@ -1,4 +1,6 @@
-# 집의 다음 · 전세 상담 데모
+# 집의 다음 · GPU 실행 로그 재생
+
+실제 상담 화면은 [원본 시연 영상 · 1분 2초](https://drive.google.com/file/d/1glDUGIpctpFEOYttOO61-2cBdNl9vSQZ/view)에서 볼 수 있습니다. 아래의 32초 영상은 실행 로그를 카드로 재구성한 요약본입니다.
 
 **[후보 검색부터 시작](01-search.md)** · [현장 재검증](02-inspection.md) · [입주 지연](03-schedule.md)
 

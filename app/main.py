@@ -53,9 +53,11 @@ def error_response(code: str, message: str, status: int, retryable: bool = False
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
-    application = FastAPI(title="집의 다음 · 사전 준비", version=__version__,
-                          description="가상 자료와 실거래 조회를 분리한 Zoro 연결 전 준비 서버")
+    application = FastAPI(title="집의 다음 · 전세 상담 에이전트", version=__version__,
+                          description="가상 매물 상담, 현장 재검증, 이사 일정 조정과 국토부 실거래 조회를 제공하는 앱")
     application.state.settings = settings if settings is not None else Settings.from_env()
+    codespace_host = application.state.settings.codespace_host
+    codespace_origin = f"https://{codespace_host}" if codespace_host else None
     application.state.molit_fetcher = fetch_transactions
     application.state.session_store = SessionStore(application.state.settings.state_db_path)
     application.state.tool_service = ToolService(application.state.session_store, {
@@ -69,7 +71,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return error_response("CROSS_SITE_REQUEST", "이 화면에서 직접 요청해주세요.", 403)
         if request.url.path.startswith("/api/") and request.method in {"POST", "PATCH", "PUT", "DELETE"}:
             origin = request.headers.get("origin")
-            if origin and origin.rstrip("/") != str(request.base_url).rstrip("/"):
+            if origin and origin.rstrip("/") not in {str(request.base_url).rstrip("/"), codespace_origin}:
                 return error_response("CROSS_SITE_REQUEST", "같은 프로그램 화면에서 요청해주세요.", 403)
             if request.headers.get("content-type", "").split(";")[0].strip().lower() != "application/json":
                 return error_response("JSON_REQUIRED", "JSON 형식으로 요청해주세요.", 415)
@@ -185,7 +187,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(tools_router)
     application.include_router(agent_router)
     application.add_middleware(BodySizeLimitMiddleware)
-    application.add_middleware(TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "testserver"])
+    allowed_hosts = ["localhost", "127.0.0.1", "testserver"]
+    if codespace_host:
+        allowed_hosts.append(codespace_host)
+    application.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
     application.mount("/static", StaticFiles(directory=PROJECT_ROOT / "static"), name="static")
     return application
 

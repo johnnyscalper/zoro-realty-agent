@@ -1,25 +1,23 @@
 # 집의 다음 · Track 1 제출 자료
 
-강남구 아파트 전세 상담에서 현장 정보가 바뀌면 어떤 매물을 빼야 하는지, 입주가 늦어지면 청소와 이사를 언제 다시 잡을 수 있는지 확인하는 에이전트입니다. Zoro-1이 다음 도구를 선택하고 앱이 검색, 현장 기록, 일정 계산을 실행합니다.
+**[Google Slides 발표자료](https://docs.google.com/presentation/d/1VPpDth7YF2oiBI0g6eKCIF2ZDJQByB7qyvs8k9Aug9E/edit?slide=id.p1#slide=id.p1) · [실제 앱 녹화 · 1분 2초](https://drive.google.com/file/d/1glDUGIpctpFEOYttOO61-2cBdNl9vSQZ/view) · [앱 실행 및 프로젝트 소개](../README.md)**
 
-**[심사용 데모 열기](demo/README.md)** · [5분 발표 원고](../docs/TRACK1_TALK_KO.md) · [프로젝트 실행 안내](../README.md)
+행사 GPU 연결은 종료했습니다. 발표 8장의 녹화에서는 강남구 전세 조건으로 후보를 찾고 현장에서 무계단 출입이 불가능하다고 확인한 L001을 재검증합니다. 중개사가 변경을 승인한 뒤 화면 오른쪽에서 **확인 필요 3개 → 2개, 제외 11개 → 12개**로 바뀝니다. 마지막에는 앱의 **Zoro 서버 응답 사용** 기록이 보입니다. [시연에 사용한 앱 코드](../app) · [GPU 없는 Codespaces 체험](https://codespaces.new/johnnyscalper/zoro-realty-agent)
 
-## L40S 실행 로그
+## L40S에서 실행한 세 가지 상담
 
-2026년 11월 19일 17시 20분(KST), Windows 앱의 Check 5를 NVIDIA Brev의 L40S 모델 서버에 연결해 세 시나리오를 검사했습니다. 매물과 업체 일정은 가상 자료이며, 검사 프로그램이 시연용 변경을 승인했습니다.
+2026년 11월 19일 17시 20분(한국 시간), 앱 v0.4.3의 Check 5를 Brev L40S 모델 서버에 연결해 검사했습니다. 가상 매물과 업체 시간표를 사용했고, 검사 프로그램이 변경 승인을 입력했습니다. 시간은 모델 호출과 앱 처리를 합친 값입니다.
 
-| 시나리오 | 실제 모델 호출에서 확인한 행동 | 경과 시간 | 로그 |
-| --- | --- | ---: | --- |
-| 후보 검색 | 후보 검색을 실행한 뒤 추가 질문을 선택했습니다. 최종 대화 상태는 `needs_input`입니다. | 6.44초 | [01-candidate_search.json](logs/01-candidate_search.json) |
-| 현장 재검증 | 기록 제안을 승인한 뒤 관찰을 한 번 저장하고, 무계단 접근이 불가능한 L001을 후보에서 제외했습니다. | 4.103초 | [02-inspection_recheck.json](logs/02-inspection_recheck.json) |
-| 입주 지연 | 승인 후 입주 시각을 변경하고 충돌을 찾아 대안을 제시했습니다. 기존 청소·이사 시간은 이 단계에서 유지됐습니다. | 10.42초 | [03-entry_delay.json](logs/03-entry_delay.json) |
+| 시나리오 | 확인한 행동과 상태 | 시간 |
+| --- | --- | ---: |
+| [후보 검색](logs/01-candidate_search.json) | 후보를 검색한 뒤 추가 질문을 선택해 `needs_input` 상태에서 멈춥니다. | 6.44초 |
+| [현장 재검증](logs/02-inspection_recheck.json) | 현장 기록을 제안하고 승인 후 한 번 저장합니다. 무계단 접근이 불가능한 L001이 후보에서 제외됩니다. | 4.103초 |
+| [입주 지연](logs/03-entry_delay.json) | 승인된 입주 시각을 반영하고 일정 충돌과 대안을 제시합니다. 고객이 대안을 고르기 전까지 청소·이사 시간은 유지됩니다. | 10.42초 |
 
-각 JSON은 참가자가 전달한 통합 결과의 공통 실행 정보와 해당 시나리오의 `result`를 담고 있습니다. `zoro_used`는 턴마다 기록합니다. 현장 재검증의 두 번째 턴에서는 앱이 승인된 행동을 처리했습니다. 소요 시간은 모델 호출과 앱 처리를 포함합니다. [통합 기록](logs/zoro_live_check.json) · [판정 코드](../scripts/check_zoro.py)
+세 사례 모두 통과했습니다. 각 턴의 `zoro_used`와 도구 목록은 JSON에 있습니다. 현장 재검증의 두 번째 턴은 앞서 승인받은 동작을 앱이 처리했습니다. 이 실행에서는 국토부 실거래 API와 운영 DB를 사용하지 않았습니다. [원본 통합 기록](logs/zoro_live_check.json) · [판정 코드](../scripts/check_zoro.py)
 
-개발용 규칙 모드에서는 별도로 20개 시나리오를 실행해 모두 통과했습니다. 같은 제출 코드의 전체 자동 테스트는 1,271개가 통과했습니다.
+## 심사 중 직접 확인하기
 
-## 재현
-
-1. 이 브랜치의 코드를 받아 Windows에서 `START_WINDOWS.cmd`를 실행합니다. 개발용 규칙 모드는 시연 자료만으로 실행할 수 있습니다.
-2. 실제 모델을 사용할 때는 GPU 서버를 실행하고 로컬 포트 전달을 연 뒤 `CONFIGURE_ZORO_WINDOWS.cmd`에서 연결을 저장합니다. [GPU 연결 안내](../docs/ZORO_GPU_QUICKSTART.md)
-3. `CHECK_ZORO_WINDOWS.cmd`가 세 사례를 독립된 임시 상담에서 검사하고 `reports/zoro_live_check.json`을 생성합니다. 국토부의 과거 실거래 조회는 앱에서 별도로 실행할 수 있습니다.
+- 실제 앱 화면과 Zoro 동작은 위 1분 2초 녹화에서 확인할 수 있습니다. 32초짜리 별도 영상은 세 시나리오의 **저장된 로그를 카드로 재구성한 요약본**입니다. [로그 카드와 재생 영상](demo/README.md)
+- 앱은 GPU 없이 개발용 규칙 모드로 작동합니다. Windows에서 `START_WINDOWS.cmd`를 열고 **키 없이 예시 자료로 먼저 시작**을 고르세요. 독립적으로 실행한 개발용 HTTP 상담 시나리오 20개가 모두 통과했습니다. [시나리오와 실행 방법](../docs/AGENT_EVALUATION.md)
+- GPU에서 세 검사를 다시 수행하려면 모델 서버를 준비한 뒤 연결을 설정하고 `CHECK_ZORO_WINDOWS.cmd`를 실행합니다. 검사 결과는 `reports/zoro_live_check.json`에 저장됩니다. [GPU 연결 안내](../docs/ZORO_GPU_QUICKSTART.md)
