@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#193b35">
+  <title>집의 다음 · 부동산 에이전트 준비실</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/app.js" defer></script>
+  <script src="/static/agent.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">본문으로 이동</a>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="프로젝트 탐색">
+      <a class="brand" href="/" aria-label="집의 다음 홈">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M6 15 16 6l10 9v11H6V15Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 26V16h8v10M21 7h5v5" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></span>
+        <span><strong>집의 다음</strong><small>ZORO REALTY PREP</small></span>
+      </a>
+      <div class="workspace-label">WORKSPACE <span>01—06</span></div>
+      <nav class="tabs" role="tablist" aria-label="준비 자료" aria-orientation="vertical">
+        <button id="tab-agent" class="nav-tab active agent-nav-tab" role="tab" aria-selected="true" aria-controls="panel-agent" data-tab="agent"><span class="nav-icon" aria-hidden="true">✳</span>상담 에이전트<span class="nav-arrow" aria-hidden="true">↗</span></button>
+        <button id="tab-listings" class="nav-tab" role="tab" aria-selected="false" aria-controls="panel-listings" tabindex="-1" data-tab="listings"><span class="nav-icon" aria-hidden="true">▦</span>매물 자료<span class="nav-arrow" aria-hidden="true">↗</span></button>
+        <button id="tab-transactions" class="nav-tab" role="tab" aria-selected="false" aria-controls="panel-transactions" tabindex="-1" data-tab="transactions"><span class="nav-icon" aria-hidden="true">≋</span>실거래 조회<span class="nav-arrow" aria-hidden="true">↗</span></button>
+        <button id="tab-preparation" class="nav-tab" role="tab" aria-selected="false" aria-controls="panel-preparation" tabindex="-1" data-tab="preparation"><span class="nav-icon" aria-hidden="true">☷</span>시연 설계<span class="nav-arrow" aria-hidden="true">↗</span></button>
+        <button id="tab-workbench" class="nav-tab" role="tab" aria-selected="false" aria-controls="panel-workbench" tabindex="-1" data-tab="workbench"><span class="nav-icon" aria-hidden="true">◇</span>실행실<span class="nav-arrow" aria-hidden="true">↗</span></button>
+      </nav>
+      <div class="sidebar-note"><span class="eyebrow">BUILD NOTE</span><p>좋은 추천은<br><strong>확인에서 시작됩니다.</strong></p><span>조건 · 근거 · 다음 행동</span></div>
+      <div class="sidebar-bottom"><span class="status-dot muted"></span><span>개발용 규칙 · Zoro 연결 준비</span><small>TRILLION AGENT AI HACKATHON 2026</small></div>
+    </aside>
+    <div class="main-shell">
+      <header class="topbar"><div class="breadcrumb">부동산 상담 에이전트 <span>/</span> <strong>상담 작업실</strong></div><div class="top-actions"><span class="stage-badge">STAGE 06</span><button id="refresh-health" class="icon-button" aria-label="연결 상태 새로고침" title="연결 상태 새로고침">↻</button></div></header>
+      <main id="main">
+        <section class="page-heading" aria-labelledby="page-title"><div><p class="eyebrow">FROM CONDITIONS TO CONFIDENCE</p><h1 id="page-title">조건을 말하면,<br class="mobile-break">다음 행동까지.</h1><p class="page-description">강남구 전세 조건부터 후보 재검사와 일정 대안까지, 근거를 확인하며 진행하세요.</p></div><div class="stage-card"><span>현재 작업 범위</span><strong>대화 · 검증 · 내부 일정</strong><small>개발용 규칙 기본 · Zoro 실제 판단 미검증</small></div></section>
+        <div id="health-error" class="notice error hidden" role="alert"></div>
+        <section class="overview" aria-label="준비 상태">
+          <div class="overview-item"><span class="metric-label">시연용 매물</span><div><strong id="listing-count">—</strong><span>개</span></div><small>전부 가상 데이터</small></div>
+          <div class="overview-item"><span class="metric-label">검증 시나리오</span><div><strong id="scenario-count">—</strong><span>개</span></div><small>기대 행동을 정의한 사례</small></div>
+          <div class="overview-item status-item"><span class="metric-label">국토부 API</span><div class="connection-state" id="molit-status">확인 중</div><small id="molit-detail">서버 설정을 확인하고 있습니다.</small></div>
+          <div class="overview-item status-item"><span class="metric-label">Zoro 판단 모델</span><div id="agent-overview-zoro" class="connection-state"><span class="status-dot muted"></span>연결 준비</div><small id="zoro-detail">실제 모델 판단은 아직 실행하지 않습니다.</small></div>
+        </section>
+
+        <section id="panel-agent" role="tabpanel" aria-labelledby="tab-agent" tabindex="0">
+          <div class="section-heading agent-section-heading"><div><h2>상담 에이전트 <span class="pill synthetic">가상 매물로 시연</span></h2><p>요청 → 도구 실행 → 결과 확인. 저장할 변경은 먼저 검토하고 승인합니다.</p></div><span class="agent-local-label"><span class="status-dot"></span>로컬 세션</span></div>
+          <div class="agent-mode-bar">
+            <div class="agent-mode-field"><label for="agent-mode">판단 방식</label><select id="agent-mode" aria-describedby="agent-mode-description"><option value="development" selected>개발용 규칙 모드</option><option value="zoro" disabled>Zoro 서버 모드 · 설정 필요</option></select></div>
+            <div class="agent-mode-field"><label for="agent-data-mode">실거래 데이터</label><select id="agent-data-mode" aria-describedby="agent-data-description"><option value="sample" selected>가상 응답 예시</option><option value="live">국토부 실제 조회</option></select></div>
+            <div class="agent-mode-explanation"><p id="agent-mode-description">정해진 표현과 규칙으로 도구를 선택합니다. Zoro 또는 범용 자연어 모델이 아닙니다.</p><p id="agent-data-description">실거래 요청에만 적용됩니다. 가상 응답을 사용하며 실제 가격 근거가 아닙니다.</p></div>
+          </div>
+          <div class="agent-session-toolbar">
+            <div class="agent-session-identification"><span id="agent-session-label">새 상담을 시작하세요</span><code id="agent-active-id"></code><span id="agent-revision" class="revision-badge" hidden></span></div>
+            <div class="agent-toolbar-actions"><button id="agent-new" type="button" class="button secondary">새 상담</button><button id="agent-reload" type="button" class="button ghost" disabled>새로고침</button><details id="agent-session-details" class="agent-session-details"><summary>세션 이어가기</summary><form id="agent-resume-form"><label for="agent-session-id">기존 세션 ID</label><input id="agent-session-id" type="text" maxlength="80" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="실행실 또는 상담의 세션 ID" required><button type="submit" class="button secondary">불러오기</button><button id="agent-from-workbench" type="button" class="button ghost">실행실 세션 이어가기</button><small>이 브라우저 탭에는 마지막 세션 ID만 기억합니다.</small></form></details></div>
+          </div>
+          <div id="agent-error" class="notice error hidden" role="alert"></div>
+          <div id="agent-conflict" class="agent-conflict hidden"><p>최신 상태를 불러와 저장 결과와 승인 대기 내용을 확인하세요. 요청을 자동으로 다시 보내지 않습니다.</p><button id="agent-conflict-reload" type="button" class="button secondary">최신 상태 불러오기</button></div>
+          <div class="agent-layout">
+            <div class="agent-dialogue-column">
+              <section class="agent-conversation" aria-labelledby="agent-conversation-title">
+                <div class="agent-conversation-header"><div><span class="eyebrow">CONVERSATION / 06</span><h3 id="agent-conversation-title">함께 확인하는 집 찾기</h3></div><span id="agent-execution-badge" class="pill">아직 실행 전</span></div>
+                <div id="agent-transcript" class="agent-transcript" role="log" aria-label="상담 대화" aria-live="polite" aria-relevant="additions text" tabindex="0"></div>
+                <div id="agent-pending" class="agent-review" hidden aria-labelledby="agent-review-title" tabindex="-1"><div class="agent-review-heading"><span class="agent-review-icon" aria-hidden="true">✓</span><div><span class="eyebrow">REVIEW BEFORE SAVE</span><h4 id="agent-review-title">이 변경을 저장할까요?</h4></div><span class="pill verification_required">승인 대기</span></div><p id="agent-review-summary"></p><dl id="agent-review-fields" class="agent-review-fields"></dl><p id="agent-review-note" class="agent-small-note">내용을 확인한 뒤 승인하면 저장하고 후속 검사를 이어갑니다.</p><div class="agent-review-actions"><button id="agent-confirm" type="button" class="button primary">변경 승인 · 계속</button><button id="agent-cancel" type="button" class="button secondary">이 변경 취소</button></div></div>
+                <div id="agent-examples" class="agent-examples" aria-label="상담 요청 예시">
+                  <button type="button" data-agent-example="conditions"><span>01 · 조건으로 찾기</span><strong>10억 · 75㎡ · 무계단 접근</strong><span aria-hidden="true">↗</span></button>
+                  <button type="button" data-agent-example="inspection"><span>02 · 확인 결과 반영</span><strong>L001 무계단 접근 불가</strong><span aria-hidden="true">↗</span></button>
+                  <button type="button" data-agent-example="schedule"><span>03 · 일정 다시 짜기</span><strong>입주 가능 시각을 오후 3시로</strong><span aria-hidden="true">↗</span></button>
+                  <button type="button" data-agent-example="transactions"><span>04 · 과거 자료 조회</span><strong>2026년 10월 전월세 기록</strong><span aria-hidden="true">↗</span></button>
+                </div>
+                <form id="agent-chat-form" class="agent-composer"><label for="agent-message">조건이나 바뀐 상황을 알려주세요</label><textarea id="agent-message" rows="3" maxlength="2000" placeholder="예: 보증금은 10억 원 이하, 무계단 접근은 필수예요." aria-describedby="agent-composer-hint agent-character-count" required></textarea><div class="agent-composer-bottom"><p id="agent-composer-hint">Enter 전송 · Shift+Enter 줄바꿈</p><span id="agent-character-count">0 / 2,000</span><button id="agent-send" type="submit" class="button primary">보내기 <span aria-hidden="true">↑</span></button></div></form>
+              </section>
+              <p id="agent-status" class="agent-operation-status" role="status" aria-live="polite">예시를 선택하거나 요청을 입력하면 빈 조건의 새 상담을 시작합니다.</p>
+              <section class="agent-trace-card" aria-labelledby="agent-trace-title"><div class="agent-card-heading"><div><span class="eyebrow">ACTIONS &amp; EVIDENCE</span><h3 id="agent-trace-title">실행한 도구와 근거</h3></div><span id="agent-trace-count" class="pill">0건</span></div><p class="agent-small-note">실제 실행 결과와 짧은 설명입니다. 가상 매물·가상 거래·국토부 기록의 출처를 구분합니다.</p><div id="agent-trace" class="agent-trace-list"></div></section>
+            </div>
+            <aside class="agent-context-column" aria-label="현재 상담 상태">
+              <section class="agent-summary-card"><div class="agent-card-heading"><h3>현재 조건</h3><span class="pill">저장된 조건</span></div><div id="agent-conditions"></div><p class="agent-small-note">필수 조건은 승인 없이 완화하지 않습니다.</p></section>
+              <section class="agent-summary-card"><div class="agent-card-heading"><h3>후보 요약</h3><span class="pill synthetic">가상 매물</span></div><div id="agent-candidates"></div></section>
+              <section class="agent-summary-card"><div class="agent-card-heading"><h3>입주 · 청소 · 이사</h3><span class="pill">내부 일정</span></div><div id="agent-schedule"></div><p class="agent-small-note">일정 적용은 내부 기록 변경입니다. 실제 예약이나 업체 연락을 하지 않습니다.</p></section>
+              <button id="agent-open-workbench" type="button" class="agent-open-workbench" disabled><span>같은 세션의 세부 도구 보기</span><strong>실행실에서 확인 <span aria-hidden="true">↗</span></strong></button>
+            </aside>
+          </div>
+        </section>
+
+        <section id="panel-listings" role="tabpanel" aria-labelledby="tab-listings" tabindex="0" hidden>
+          <div class="section-heading"><div><h2>시연용 매물 자료 <span class="pill synthetic">가상 데이터</span></h2><p>조건 필터와 현장 확인 항목을 점검하세요. 실제 매물이나 AI 추천 결과가 아닙니다.</p></div><span class="subtle-label">서울 · 강남구 · 아파트 전세</span></div>
+          <form id="listing-form" class="filter-bar">
+            <div class="form-field"><label for="max-deposit">보증금 상한</label><select name="max_deposit_krw" id="max-deposit"><option value="">제한 없음</option><option value="500000000">5억 원</option><option value="800000000">8억 원</option><option value="1000000000">10억 원</option><option value="1200000000">12억 원</option><option value="1500000000">15억 원</option><option value="2000000000">20억 원</option></select></div>
+            <div class="form-field"><label for="min-area">최소 전용면적</label><span class="label-unit" aria-hidden="true">㎡</span><input name="min_area_m2" id="min-area" type="number" min="0" max="1000" step="0.1" placeholder="예: 59" aria-describedby="area-unit"><span id="area-unit" class="sr-only">단위: 제곱미터</span></div>
+            <div class="form-field"><label for="listing-status">매물 상태</label><select name="status" id="listing-status"><option value="">전체 상태</option><option value="available">시연상 거래 가능</option><option value="verification_required">확인 필요</option><option value="contracted">계약 완료</option></select></div>
+            <div class="filter-actions"><button type="submit" class="button primary" id="listing-submit">조건 적용</button><button type="button" class="button ghost" id="listing-reset">초기화</button></div>
+          </form>
+          <div class="result-heading"><p id="listing-result" role="status" aria-live="polite">자료를 불러오는 중입니다.</p><span>일반 조건 필터 · Zoro 판단 아님</span></div>
+          <div id="listing-error" class="notice error hidden" role="alert"></div>
+          <div id="listing-grid" class="listing-grid" aria-busy="true"></div>
+        </section>
+
+        <section id="panel-transactions" role="tabpanel" aria-labelledby="tab-transactions" tabindex="0" hidden>
+          <div class="section-heading"><div><h2>실거래 조회</h2><p>매매·전월세 신고 자료의 조회와 금액 변환을 확인합니다.</p></div><span class="pill">과거 계약 자료</span></div>
+          <div class="notice info"><span aria-hidden="true">ⓘ</span><p>실거래 기록은 현재 거래 가능한 매물이나 입주 가능일을 뜻하지 않습니다. 신고·반영 시점에 따라 누락이나 지연이 있을 수 있습니다.</p></div>
+          <form id="transaction-form" class="transaction-form">
+            <fieldset class="mode-control"><legend>조회 데이터</legend><label><input type="radio" name="mode" value="sample" checked><span>가상 응답 예시</span></label><label><input type="radio" name="mode" value="live"><span>국토부 실제 조회</span></label></fieldset>
+            <p id="mode-description" class="mode-description">API 키 없이 동작하는 가상 응답입니다. 실제 거래 가격으로 사용하지 마세요.</p>
+            <div class="transaction-fields"><div class="form-field"><label for="transaction-kind">거래 종류</label><select id="transaction-kind" name="kind"><option value="rent">전월세</option><option value="trade">매매</option></select></div><div class="form-field"><label for="lawd-cd">법정동 시군구 코드</label><input id="lawd-cd" name="lawd_cd" value="11680" pattern="[0-9]{5}" inputmode="numeric" maxlength="5" required aria-describedby="district-help"><small id="district-help">11680 = 서울 강남구</small></div><div class="form-field"><label for="deal-month">계약 연월</label><input id="deal-month" name="month" type="month" value="2026-10" required></div><button class="button primary" id="transaction-submit" type="submit">가상 응답 조회 <span aria-hidden="true">↗</span></button></div>
+          </form>
+          <div id="transaction-error" class="notice error hidden" role="alert"></div>
+          <div id="transaction-result" class="transaction-result" aria-busy="false"><div class="empty-state"><span class="empty-symbol" aria-hidden="true">≋</span><h3>조회할 자료를 선택하세요</h3><p>먼저 가상 응답으로 화면을 확인하고,<br>서버에 키를 설정한 뒤 실제 조회를 검증할 수 있습니다.</p></div></div>
+          <div id="transaction-pagination" class="pagination hidden"><button id="previous-page" type="button" class="button secondary">← 이전</button><p id="page-status" role="status"></p><button id="next-page" type="button" class="button secondary">다음 →</button></div>
+        </section>
+
+        <section id="panel-preparation" role="tabpanel" aria-labelledby="tab-preparation" tabindex="0" hidden>
+          <div class="section-heading"><div><h2>시연 설계</h2><p>상황과 기대 행동을 정리한 자료입니다. 테스트 통과나 모델 실행 결과를 뜻하지 않습니다.</p></div><span class="pill synthetic">가상 상황</span></div>
+          <div class="preparation-intro"><div><span class="step-index">01</span><h3>기본 상담</h3><p>필수 조건과 선호를 구분하고<br>부족한 정보를 확인합니다.</p></div><div><span class="step-index">02</span><h3>추천 매물 재검증</h3><p>현장 확인 결과에 따라<br>기존 판단을 다시 검토합니다.</p></div><div><span class="step-index">03</span><h3>이사 일정 복구</h3><p>일정 변경의 영향을 확인하고<br>실행 가능한 대안을 찾습니다.</p></div></div>
+          <div id="preparation-error" class="notice error hidden" role="alert"></div>
+          <div class="section-heading compact"><div><h3>시연용 일정 자료</h3><p>입주·청소·이사 일정의 입력 예시 · 실제 업체 예약 아님</p></div><span class="pill">읽기 전용</span></div><div id="schedule-list" class="schedule-list"></div>
+          <div class="section-heading compact"><div><h3>검증 시나리오 목록</h3><p>각 사례를 열어 기대 행동과 금지 행동을 확인하세요.</p></div><div class="inline-filter"><label for="scenario-filter" class="sr-only">시나리오 분류</label><select id="scenario-filter"><option value="">전체 분류</option><option value="consultation">기본 상담</option><option value="reverification">매물 재검증</option><option value="schedule">일정 복구</option><option value="api">API 조회</option></select></div></div>
+          <div id="scenario-list" class="scenario-list"></div>
+        </section>
+        <section id="panel-workbench" role="tabpanel" aria-labelledby="tab-workbench" tabindex="0" hidden>
+          <div class="section-heading"><div><h2>실행실 <span class="pill synthetic">가상 자료 · 수동 도구</span></h2><p>조건 검사, 현장 확인 기록, 내부 일정 변경을 직접 실행합니다.</p></div><span class="pill">직접 도구 실행</span></div>
+          <div class="notice info"><span aria-hidden="true">ⓘ</span><p>모든 매물과 업체 시간은 시연용 가상 자료입니다. 결과는 정해진 규칙으로 계산하며, 모델 판단·실제 현장 확인·업체 예약을 수행하지 않습니다.</p></div>
+
+          <div class="workbench-session">
+            <div class="session-start"><span class="eyebrow">LOCAL WORKBENCH / 05</span><h3>변화를 기록하는 시연 세션</h3><p>10억 원 · 75㎡ 이상 · 11월 25일까지 입주<br>무계단 접근 필수 · 낮은 소음 선호</p><button id="workbench-create" type="button" class="button primary">기본 조건으로 시작 · 검색 <span aria-hidden="true">↗</span></button><small>누를 때마다 별도의 새 세션을 만듭니다.</small></div>
+            <form id="workbench-resume-form" class="session-resume"><label for="workbench-session-id">기존 세션 이어가기</label><p>세션 ID로 저장된 조건과 변경 이력을 불러옵니다.</p><input id="workbench-session-id" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="80" placeholder="세션 ID" aria-describedby="workbench-session-help" required><div class="workbench-actions"><button type="submit" class="button secondary">세션 불러오기</button><button id="workbench-reload" type="button" class="button ghost" data-needs-session>현재 세션 새로고침</button></div><small id="workbench-session-help">이 탭에는 마지막 세션 ID만 기억합니다. 탭·브라우저를 닫기 전 ID를 따로 보관하세요. 같은 프로젝트 폴더에서 실행한 서버로 불러올 수 있습니다.</small></form>
+          </div>
+          <div id="workbench-error" class="notice error hidden" role="alert"></div>
+          <div id="workbench-conflict" class="workbench-reload-note hidden"><p>다른 요청에서 세션이 바뀌었습니다. 최신 상태를 확인한 뒤 작업을 다시 선택하세요.</p><button id="workbench-conflict-reload" type="button" class="button secondary">최신 상태 불러오기</button></div>
+          <p id="workbench-status" class="workbench-status" role="status" aria-live="polite">새 시연을 시작하거나 기존 세션을 불러오세요.</p>
+
+          <div id="workbench-content" hidden aria-busy="false">
+            <div class="session-meta"><div><span class="status-dot"></span><strong>작업 중인 세션</strong><code id="workbench-active-id"></code></div><span id="workbench-revision" class="revision-badge"></span></div>
+            <nav class="workbench-jump" aria-label="실행실 작업 바로가기"><a href="#workbench-conditions-title">조건 수정</a><a href="#workbench-candidates-title">후보 분류</a><a href="#workbench-verification-title">현장 확인</a><a href="#workbench-schedule-title">일정 변경</a><a href="#workbench-audit-title">변경 이력</a></nav>
+
+            <section class="workbench-block" aria-labelledby="workbench-conditions-title">
+              <div class="workbench-block-heading"><div><span class="step-index">01 / CONDITIONS</span><h3 id="workbench-conditions-title">필수 조건과 선호</h3></div><span id="workbench-condition-state" class="workbench-helper">저장된 조건</span></div>
+              <form id="workbench-conditions-form">
+                <div class="workbench-fields">
+                  <div class="form-field"><label for="workbench-budget">보증금 상한 <span>억 원</span></label><input id="workbench-budget" type="text" inputmode="decimal" maxlength="24" value="10" placeholder="예: 10 또는 9.5" aria-describedby="workbench-budget-preview" data-session-action><small id="workbench-budget-preview">1,000,000,000원</small></div>
+                  <div class="form-field"><label for="workbench-area">최소 전용면적 <span>㎡</span></label><input id="workbench-area" type="number" min="0" step="any" value="75" placeholder="미지정" data-session-action></div>
+                  <div class="form-field"><label for="workbench-move-by">입주 기한</label><input id="workbench-move-by" type="date" value="2026-11-25" data-session-action></div>
+                  <div class="form-field"><label for="workbench-step-free">무계단 접근</label><select id="workbench-step-free" data-session-action><option value="true" selected>필수</option><option value="">미지정</option></select></div>
+                  <div class="form-field"><label for="workbench-elevator">엘리베이터</label><select id="workbench-elevator" data-session-action><option value="">미지정</option><option value="true">필수</option><option value="false">없음이 필수</option></select></div>
+                  <div class="form-field"><label for="workbench-noise">소음 선호 <span>선택</span></label><select id="workbench-noise" data-session-action><option value="">선호 없음</option><option value="low" selected>낮은 소음</option><option value="medium">보통 소음</option><option value="high">높은 소음</option></select></div>
+                  <div class="form-field workbench-neighborhoods"><label for="workbench-neighborhoods">선호 동 <span>쉼표로 구분</span></label><input id="workbench-neighborhoods" type="text" maxlength="300" placeholder="예: 삼성동, 대치동" data-session-action></div>
+                </div>
+                <div class="workbench-form-bottom"><p>필수 조건은 자동으로 완화하지 않습니다. 예산이 비어 있으면 조건 충족 후보를 제시하지 않습니다.</p><div class="workbench-actions"><button id="workbench-search" class="button secondary" type="button" data-session-action>저장된 조건으로 재검색</button><button class="button primary" type="submit" data-session-action>조건 저장 · 후보 검색</button></div></div>
+              </form>
+            </section>
+
+            <section class="workbench-block" aria-labelledby="workbench-candidates-title">
+              <div class="workbench-block-heading"><div><span class="step-index">02 / CANDIDATES</span><h3 id="workbench-candidates-title">조건별 후보 분류</h3></div><span id="workbench-search-state" class="pill"></span></div>
+              <p id="workbench-search-note" class="workbench-helper"></p>
+              <div id="workbench-candidates" class="candidate-buckets"></div>
+            </section>
+
+            <section class="workbench-block" aria-labelledby="workbench-verification-title">
+              <div class="workbench-block-heading"><div><span class="step-index">03 / FIELD CHECK</span><h3 id="workbench-verification-title">현장 확인 작업</h3></div><span id="workbench-task-count" class="pill"></span></div>
+              <p class="workbench-helper">시연 순서: L001의 입구 계단 8개를 기록한 뒤, 무계단 접근 불가를 별도로 기록하세요. 계단 수만으로 우회 경로 유무를 추정하지 않습니다.</p>
+              <form id="workbench-task-form" class="verification-create">
+                <div class="form-field"><label for="workbench-task-listing">가상 매물</label><select id="workbench-task-listing" data-session-action required></select></div>
+                <div class="form-field"><label for="workbench-task-field">확인할 항목</label><select id="workbench-task-field" data-session-action><option value="entry_steps">입구 계단 수</option><option value="step_free_access">무계단 접근 가능 여부</option><option value="elevator">엘리베이터 유무</option><option value="noise_level">소음 수준</option></select></div>
+                <button id="workbench-task-create" type="submit" class="button secondary" data-session-action>확인 작업 만들기</button>
+              </form>
+              <div id="workbench-tasks" class="verification-tasks"></div>
+              <details class="workbench-history"><summary id="workbench-evidence-summary">확인 기록</summary><div id="workbench-evidence" class="evidence-list"></div></details>
+            </section>
+
+            <section class="workbench-block" aria-labelledby="workbench-schedule-title">
+              <div class="workbench-block-heading"><div><span class="step-index">04 / SCHEDULE</span><h3 id="workbench-schedule-title">입주 · 청소 · 이사 일정</h3></div><span class="pill">내부 일정표</span></div>
+              <p class="workbench-helper">입주 가능 시각은 집에 들어갈 수 있는 시점입니다. 시간을 바꾸면 청소·이사를 자동 이동하지 않고 충돌을 먼저 표시합니다.</p>
+              <div id="workbench-schedule-events" class="workbench-schedule-events"></div>
+              <form id="workbench-entry-form" class="entry-change-form"><div class="form-field"><label for="workbench-entry-end">새 입주 가능 시각 <span>한국 시간 · KST</span></label><input id="workbench-entry-end" type="datetime-local" step="60" value="2026-11-25T15:00" data-session-action required></div><button type="submit" class="button secondary" data-session-action>입주 시각 변경 · 충돌 확인</button></form>
+              <div id="workbench-schedule-conflicts" class="schedule-conflicts" aria-live="polite"></div>
+              <details class="workbench-history"><summary>등록된 가상 업체 가능 시간</summary><div id="workbench-provider-slots" class="provider-slot-list"></div></details>
+              <div class="proposal-heading"><div><h4>가능 시간 안에서 일정 대안</h4><p>대안을 고른 뒤 적용 버튼을 눌러야 내부 일정표가 바뀝니다. 실제 예약이나 연락은 하지 않습니다.</p></div><button id="workbench-propose" type="button" class="button primary" data-session-action>일정 대안 만들기</button></div>
+              <div id="workbench-proposals" class="schedule-proposals"></div>
+            </section>
+
+            <section class="workbench-block audit-block" aria-labelledby="workbench-audit-title"><div class="workbench-block-heading"><div><span class="step-index">05 / AUDIT</span><h3 id="workbench-audit-title">변경 이력</h3></div><span id="workbench-audit-count" class="pill"></span></div><p class="workbench-helper">이 세션에서 실행한 도구와 변경 내용입니다. 최근 기록부터 표시합니다.</p><ol id="workbench-audit" class="audit-list"></ol></section>
+          </div>
+        </section>
+        <footer class="footer"><span>집의 다음 <span aria-hidden="true">·</span> 대화 · 도구 · 검증 단계 01—06</span><span>가상 자료와 실제 조회 결과를 구분해서 사용하세요.</span></footer>
+      </main>
+    </div>
+  </div>
+  <dialog id="listing-dialog" aria-labelledby="detail-title"><div class="dialog-top"><span class="eyebrow">LISTING / FIELD CHECK</span><button class="icon-button" id="close-dialog" aria-label="매물 상세 닫기">×</button></div><div id="listing-detail"></div></dialog>
+</body>
+</html>

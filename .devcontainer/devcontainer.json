@@ -1,0 +1,13 @@
+{
+  "name": "집의 다음",
+  "image": "mcr.microsoft.com/devcontainers/python:3-3.12-bookworm",
+  "postCreateCommand": "python -m venv .venv && .venv/bin/python -m pip install -r requirements.txt",
+  "postStartCommand": "mkdir -p .runtime && (APP_PORT=8000 nohup flock -n .runtime/codespaces.lock .venv/bin/python -u run.py >>.runtime/codespaces.log 2>&1 </dev/null &)",
+  "forwardPorts": [8000],
+  "portsAttributes": {
+    "8000": {
+      "label": "집의 다음",
+      "onAutoForward": "openBrowser"
+    }
+  }
+}

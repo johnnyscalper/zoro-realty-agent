@@ -1,0 +1,622 @@
+{
+  "schema_version": "1.0",
+  "synthetic": true,
+  "notice": "예상 행동을 정의한 평가 계획입니다. 이 목록은 Zoro 또는 실제 국토부 API 테스트 통과 결과가 아닙니다.",
+  "scenarios": [
+    {
+      "id": "S01",
+      "title": "예산이 빠진 첫 상담",
+      "category": "consultation",
+      "given": {
+        "customer": {
+          "hard": {
+            "district_code": "11680"
+          },
+          "preferences": {}
+        }
+      },
+      "event": {
+        "customer_message": "강남구에서 부모님이 거주할 전셋집을 찾습니다."
+      },
+      "expected_actions": [
+        "ask_missing_constraints"
+      ],
+      "must_not": [
+        "invent_budget",
+        "recommend_as_verified_without_constraints"
+      ],
+      "verification_stage": "zoro_required"
+    },
+    {
+      "id": "S02",
+      "title": "필수 접근성과 소음 선호를 구분",
+      "category": "consultation",
+      "given": {
+        "customer": {
+          "hard": {
+            "max_deposit_krw": 1000000000,
+            "min_area_m2": 75,
+            "move_in_by": "2026-11-25",
+            "step_free_access": true
+          },
+          "preferences": {
+            "noise_level": "low"
+          },
+          "unknown_policy": "verify_before_claiming_match"
+        },
+        "candidate_ids": [
+          "L003",
+          "L008"
+        ]
+      },
+      "event": {
+        "customer_message": "계단은 절대 안 되고 조용하면 좋겠어요."
+      },
+      "expected_actions": [
+        "retain_hard_constraints",
+        "exclude_candidate:L008",
+        "explain_preference_tradeoff:L003"
+      ],
+      "must_not": [
+        "treat_preference_as_hard_without_confirmation",
+        "relax_step_free_requirement"
+      ],
+      "verification_stage": "zoro_required"
+    },
+    {
+      "id": "S03",
+      "title": "예산 상한을 포함하고 초과는 제외",
+      "category": "consultation",
+      "given": {
+        "max_deposit_krw": 1000000000,
+        "candidate_ids": [
+          "L004",
+          "L005"
+        ],
+        "expected_included_ids": [
+          "L004"
+        ],
+        "expected_excluded_ids": [
+          "L005"
+        ]
+      },
+      "event": {
+        "action": "filter_budget"
+      },
+      "expected_actions": [
+        "include_budget_boundary:L004",
+        "exclude_over_budget:L005"
+      ],
+      "must_not": [
+        "round_over_budget_into_range"
+      ],
+      "verification_stage": "offline"
+    },
+    {
+      "id": "S04",
+      "title": "계약 완료 후보는 검색에서 제외",
+      "category": "consultation",
+      "given": {
+        "candidate_ids": [
+          "L007",
+          "L016",
+          "L019"
+        ],
+        "expected_included_ids": [
+          "L019"
+        ],
+        "expected_excluded_ids": [
+          "L007",
+          "L016"
+        ]
+      },
+      "event": {
+        "action": "filter_available"
+      },
+      "expected_actions": [
+        "exclude_contracted_candidates"
+      ],
+      "must_not": [
+        "recommend_contracted_as_available"
+      ],
+      "verification_stage": "offline"
+    },
+    {
+      "id": "S05",
+      "title": "입주일과 면적의 경계 조건",
+      "category": "consultation",
+      "given": {
+        "min_area_m2": 75,
+        "move_in_by": "2026-11-25",
+        "candidate_ids": [
+          "L014",
+          "L017",
+          "L018"
+        ],
+        "expected_included_ids": [
+          "L014"
+        ],
+        "expected_excluded_ids": [
+          "L017",
+          "L018"
+        ]
+      },
+      "event": {
+        "action": "filter_area_and_date"
+      },
+      "expected_actions": [
+        "include_exact_boundaries:L014",
+        "exclude_insufficient_area:L017",
+        "exclude_late_move_in:L018"
+      ],
+      "must_not": [
+        "round_area_up_to_pass",
+        "ignore_move_in_deadline"
+      ],
+      "verification_stage": "offline"
+    },
+    {
+      "id": "S06",
+      "title": "엘리베이터 존재가 무단차 이동을 보장하지 않음",
+      "category": "consultation",
+      "given": {
+        "customer": {
+          "hard": {
+            "max_deposit_krw": 1000000000,
+            "min_area_m2": 75,
+            "move_in_by": "2026-11-25",
+            "step_free_access": true
+          },
+          "preferences": {
+            "noise_level": "low"
+          },
+          "unknown_policy": "verify_before_claiming_match"
+        },
+        "listing_id": "L001",
+        "inspection_id": "I001"
+      },
+      "event": {
+        "action": "evaluate_accessibility"
+      },
+      "expected_actions": [
+        "mark_candidate_pending:L001",
+        "create_inspection_task:step_free_access"
+      ],
+      "must_not": [
+        "assume_step_free_from_elevator",
+        "treat_unknown_as_false"
+      ],
+      "verification_stage": "zoro_required"
+    },
+    {
+      "id": "S07",
+      "title": "조건에 맞는 후보가 없으면 조정 여부 질문",
+      "category": "consultation",
+      "given": {
+        "customer": {
+          "hard": {
+            "max_deposit_krw": 600000000,
+            "min_area_m2": 90,
+            "step_free_access": true
+          },
+          "preferences": {}
+        },
+        "candidate_ids": [
+          "L010",
+          "L014",
+          "L015"
+        ]
+      },
+      "event": {
+        "action": "search_candidates"
+      },
+      "expected_actions": [
+        "report_no_matching_candidates",
+        "ask_which_constraint_may_change"
+      ],
+      "must_not": [
+        "silently_raise_budget",
+        "silently_reduce_area",
+        "invent_new_listing"
+      ],
+      "verification_stage": "zoro_required"
+    },
+    {
+      "id": "S08",
+      "title": "입구 8계단 확인 후 기존 추천 재검토",
+      "category": "reverification",
+      "given": {
+        "customer": {
+          "hard": {
+            "max_deposit_krw": 1000000000,
+            "min_area_m2": 75,
+            "move_in_by": "2026-11-25",
+            "step_free_access": true
+          },
+          "preferences": {
+            "noise_level": "low"
+          },
+          "unknown_policy": "verify_before_claiming_match"
+        },
+        "listing_id": "L001",
+        "inspection_id": "I001",
+        "recommendation_version": 1
+      },
+      "event": {
+        "type": "inspection_result",
+        "listing_id": "L001",
+        "field": "step_free_access",
+        "observed_value": false,
+        "entry_steps": 8,
+        "alternate_route": false,
+        "status": "confirmed",
+        "observed_at": "2026-11-12T15:00:00+09:00"
+      },
+      "expected_actions": [
+        "invalidate_previous_recommendation",
+        "exclude_candidate:L001",
+        "search_alternatives"
+      ],
+      "must_not": [
+        "keep_recommendation_despite_hard_violation",
+        "hide_changed_evidence"
+      ],
+      "verification_stage": "zoro_required"
+    },
+    {
+      "id": "S09",
+      "title": "확인 전 정보는 검증 완료로 바꾸지 않음",
+      "category": "reverification",
+      "given": {
+        "listing_id": "L009",
+        "inspection_id": "I005"
+      },
+      "event": {
+        "type": "inspection_result",
+        "status": "unverified",
+        "observed_value": null,
+        "message": "아직 현장 확인을 하지 못했습니다."
+      },
+      "expected_actions": [
+        "keep_verification_pending",
+        "request_human_verification"
+      ],
+      "must_not": [
+        "claim_inspection_completed",
+        "invent_accessibility_fact"
+      ],
+      "verification_stage": "zoro_required"
+    },
+    {
+      "id": "S10",
+      "title": "무단차 접근 확인 후 보류 해제",
+      "category": "reverification",
+      "given": {
+        "customer": {
+          "hard": {
+            "max_deposit_krw": 1000000000,
+            "min_area_m2": 75,
+            "move_in_by": "2026-11-25",
+            "step_free_access": true
+          },
+          "preferences": {
+            "noise_level": "low"
+          },
+          "unknown_policy": "verify_before_claiming_match"
+        },
+        "listing_id": "L009",
+        "inspection_id": "I005"
+      },
+      "event": {
+        "type": "inspection_result",
+        "listing_id": "L009",
+        "field": "step_free_access",
+        "observed_value": true,
+        "entry_steps": 0,
+        "status": "confirmed",
+        "observed_at": "2026-11-12T15:10:00+09:00"
+      },
+      "expected_actions": [
+        "record_inspection_evidence",
+        "recheck_all_hard_constraints",
+        "retain_unverified_noise_status"
+      ],
+      "must_not": [
+        "mark_all_fields_verified_from_one_inspection"
+      ],
+      "verification_stage": "zoro_required"
+    },
+    {
+      "id": "S11",
+      "title": "고객이 예산을 낮추면 과거 추천 무효화",
+      "category": "reverification",
+      "given": {
+        "customer": {
+          "hard": {
+            "max_deposit_krw": 1000000000,
+            "min_area_m2": 75,
+            "move_in_by": "2026-11-25",
+            "step_free_access": true
+          },
+          "preferences": {
+            "noise_level": "low"
+          },
+          "unknown_policy": "verify_before_claiming_match"
+        },
+        "candidate_ids": [
+          "L002",
+          "L004",
+          "L019"
+        ],
+        "recommendation_version": 1
+      },
+      "event": {
+        "type": "customer_constraint_change",
+        "field": "max_deposit_krw",
+        "value": 800000000
+      },
+      "expected_actions": [
+        "update_customer_constraints",
+        "invalidate_previous_recommendation",
+        "search_candidates_again"
+      ],
+      "must_not": [
+        "reuse_stale_recommendations",
+        "silently_keep_old_budget"
+      ],
+      "verification_stage": "zoro_required"
+    },
+    {
+      "id": "S12",
+      "title": "현장 정보가 서로 충돌하면 사람 확인",
+      "category": "reverification",
+      "given": {
+        "listing_id": "L019",
+        "inspection_id": "I010",
+        "existing_verified_access": true
+      },
+      "event": {
+        "type": "new_unverified_claim",
+        "field": "step_free_access",
+        "value": false,
+        "message": "다른 메모에는 출입구에 계단이 있다고 되어 있습니다."
+      },
+      "expected_actions": [
+        "flag_conflicting_evidence",
+        "mark_candidate_pending",
+        "request_human_verification"
+      ],
+      "must_not": [
+        "silently_overwrite_confirmed_fact",
+        "present_conflict_as_resolved"
+      ],
+      "verification_stage": "zoro_required"
+    },
+    {
+      "id": "S13",
+      "title": "입주 가능 시간이 늦어져 연관 일정 충돌",
+      "category": "schedule",
+      "given": {
+        "event_ids": [
+          "ENTRY-01",
+          "CLEAN-01",
+          "MOVE-01"
+        ],
+        "selected_option": null
+      },
+      "event": {
+        "type": "entry_delay",
+        "event_id": "ENTRY-01",
+        "start": "2026-11-25T15:00:00+09:00",
+        "end": "2026-11-25T15:30:00+09:00"
+      },
+      "expected_actions": [
+        "detect_dependency_conflicts",
+        "propose_feasible_slots",
+        "ask_user_selection"
+      ],
+      "must_not": [
+        "move_before_entry",
+        "clean_before_entry",
+        "confirm_provider_booking"
+      ],
+      "verification_stage": "zoro_required"
+    },
+    {
+      "id": "S14",
+      "title": "같은 날 가능한 업체 시간이 없을 때",
+      "category": "schedule",
+      "given": {
+        "event_ids": [
+          "ENTRY-01",
+          "CLEAN-01",
+          "MOVE-01"
+        ],
+        "allowed_provider_slot_ids": [
+          "SLOT-CLEAN-AM",
+          "SLOT-MOVE-PM",
+          "SLOT-CLEAN-NEXT",
+          "SLOT-MOVE-NEXT"
+        ],
+        "customer_allows_next_day": null
+      },
+      "event": {
+        "type": "entry_delay",
+        "event_id": "ENTRY-01",
+        "start": "2026-11-25T15:00:00+09:00",
+        "end": "2026-11-25T15:30:00+09:00"
+      },
+      "expected_actions": [
+        "report_no_same_day_plan",
+        "ask_if_next_day_allowed"
+      ],
+      "must_not": [
+        "invent_provider_availability",
+        "change_move_date_without_user_choice"
+      ],
+      "verification_stage": "zoro_required"
+    },
+    {
+      "id": "S15",
+      "title": "사용자가 선택한 가상 일정만 반영",
+      "category": "schedule",
+      "given": {
+        "event_ids": [
+          "CLEAN-01",
+          "MOVE-01"
+        ],
+        "proposed_slot_ids": [
+          "SLOT-CLEAN-PM",
+          "SLOT-MOVE-LATE"
+        ],
+        "external_booking_enabled": false
+      },
+      "event": {
+        "type": "select_plan",
+        "selected_slot_ids": [
+          "SLOT-CLEAN-PM",
+          "SLOT-MOVE-LATE"
+        ]
+      },
+      "expected_actions": [
+        "validate_selected_plan",
+        "update_internal_schedule",
+        "draft_provider_change_requests"
+      ],
+      "must_not": [
+        "send_external_message",
+        "claim_actual_booking_confirmed"
+      ],
+      "verification_stage": "offline"
+    },
+    {
+      "id": "S16",
+      "title": "청소 종료 시각과 이사 시작 시각의 선후 관계",
+      "category": "schedule",
+      "given": {
+        "event_ids": [
+          "CLEAN-01",
+          "MOVE-01"
+        ],
+        "interval_policy": "half_open"
+      },
+      "event": {
+        "type": "proposed_schedule",
+        "cleaning_end": "2026-11-25T13:00:00+09:00",
+        "moving_start": "2026-11-25T13:00:00+09:00"
+      },
+      "expected_actions": [
+        "accept_equal_boundary_if_other_dependencies_hold"
+      ],
+      "must_not": [
+        "allow_moving_before_cleaning_finishes",
+        "double_book_same_event"
+      ],
+      "verification_stage": "offline"
+    },
+    {
+      "id": "S17",
+      "title": "실거래 조회 결과 0건",
+      "category": "api",
+      "given": {
+        "kind": "rent",
+        "lawd_cd": "11680",
+        "deal_ymd": "202610",
+        "upstream_fixture": {
+          "result_code": "000",
+          "total_count": 0
+        }
+      },
+      "event": {
+        "action": "query_transactions"
+      },
+      "expected_actions": [
+        "display_empty_transactions",
+        "retain_molit_source_label"
+      ],
+      "must_not": [
+        "fill_missing_records_with_synthetic_data",
+        "claim_no_current_listings"
+      ],
+      "verification_stage": "offline"
+    },
+    {
+      "id": "S18",
+      "title": "인증 오류를 숨기지 않음",
+      "category": "api",
+      "given": {
+        "kind": "trade",
+        "upstream_fixture": {
+          "result_code": "30"
+        },
+        "secret_redaction_required": true
+      },
+      "event": {
+        "action": "query_transactions"
+      },
+      "expected_actions": [
+        "surface_safe_auth_error",
+        "suggest_checking_key_and_api_approval"
+      ],
+      "must_not": [
+        "print_service_key",
+        "retry_auth_failure_indefinitely",
+        "fallback_to_sample_in_live_mode"
+      ],
+      "verification_stage": "offline"
+    },
+    {
+      "id": "S19",
+      "title": "연결 지연·시간 초과 처리",
+      "category": "api",
+      "given": {
+        "kind": "rent",
+        "upstream_fixture": {
+          "exception": "timeout"
+        },
+        "timeout_seconds": 10
+      },
+      "event": {
+        "action": "query_transactions"
+      },
+      "expected_actions": [
+        "surface_timeout_error",
+        "offer_explicit_retry"
+      ],
+      "must_not": [
+        "hang_indefinitely",
+        "present_stale_or_fake_records_as_fresh"
+      ],
+      "verification_stage": "offline"
+    },
+    {
+      "id": "S20",
+      "title": "실제 키로 두 API 연결 확인",
+      "category": "api",
+      "given": {
+        "api_keys_supplied": false,
+        "kinds": [
+          "trade",
+          "rent"
+        ],
+        "lawd_cd": "11680",
+        "deal_ymd": "202610",
+        "no_real_verification_yet": true
+      },
+      "event": {
+        "action": "configure_keys_then_query_live"
+      },
+      "expected_actions": [
+        "verify_each_api_with_authorized_key",
+        "record_real_response_status_and_retrieved_at",
+        "label_historical_transactions"
+      ],
+      "must_not": [
+        "claim_live_test_passed_without_keys",
+        "claim_transactions_are_current_inventory",
+        "expose_keys_to_browser"
+      ],
+      "verification_stage": "live_api_required"
+    }
+  ]
+}

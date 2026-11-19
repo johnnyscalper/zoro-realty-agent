@@ -1,0 +1,27 @@
+{
+  "app_version": "0.4.3",
+  "check_revision": 5,
+  "checked_at": "2026-11-19T08:20:34.121803+00:00",
+  "test_type": "live_configured_endpoint_synthetic_agent_flow",
+  "data": "synthetic",
+  "model_identity": "self_reported_by_configured_endpoint_not_independently_attested",
+  "model_id_sha256": "c20975c4185cf14664142f8a448f4ebc992a23e0ff7288f6bce87b6fb86e787a",
+  "molit_live_test": false,
+  "production_database_used": false,
+  "result": {
+    "case": "candidate_search",
+    "passed": true,
+    "turns": [
+      {
+        "status": "needs_input",
+        "zoro_used": true,
+        "tools": [
+          "search_candidates",
+          "ask_user"
+        ]
+      }
+    ],
+    "approval_checked": false,
+    "elapsed_seconds": 6.44
+  }
+}

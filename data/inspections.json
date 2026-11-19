@@ -1,0 +1,105 @@
+{
+  "synthetic": true,
+  "notice": "확인 완료도 실제 현장 확인이 아닌 시연용 사실입니다. unverified 항목은 확인 근거로 사용하지 않습니다.",
+  "inspections": [
+    {
+      "id": "I001",
+      "listing_id": "L001",
+      "field": "step_free_access",
+      "observed_value": null,
+      "status": "unverified",
+      "observed_at": null,
+      "notes": "도로에서 세대 현관까지 계단 없이 이동할 수 있는지 확인 예정. 엘리베이터 존재만으로 단정하지 않습니다."
+    },
+    {
+      "id": "I002",
+      "listing_id": "L002",
+      "field": "step_free_access",
+      "observed_value": true,
+      "status": "confirmed",
+      "observed_at": "2026-11-10T14:00:00+09:00",
+      "notes": "시연용 확인 결과: 도로·건물 입구·엘리베이터·현관까지 무단차."
+    },
+    {
+      "id": "I003",
+      "listing_id": "L003",
+      "field": "noise_level",
+      "observed_value": "high",
+      "status": "confirmed",
+      "observed_at": "2026-11-09T19:00:00+09:00",
+      "notes": "시연용 야간 현장 확인에서 대화가 방해되는 소음으로 설정."
+    },
+    {
+      "id": "I004",
+      "listing_id": "L008",
+      "field": "entry_steps",
+      "observed_value": 8,
+      "status": "confirmed",
+      "observed_at": "2026-11-11T15:30:00+09:00",
+      "notes": "시연용 확인 결과: 입구 8계단, 이용 가능한 우회 경로 없음."
+    },
+    {
+      "id": "I005",
+      "listing_id": "L009",
+      "field": "step_free_access",
+      "observed_value": null,
+      "status": "unverified",
+      "observed_at": null,
+      "notes": "사진만으로 판단하지 않고 현장 확인을 요청할 항목."
+    },
+    {
+      "id": "I006",
+      "listing_id": "L009",
+      "field": "noise_level",
+      "observed_value": null,
+      "status": "unverified",
+      "observed_at": null,
+      "notes": "낮·밤 중 고객 생활 시간대의 소음 확인이 필요한 항목."
+    },
+    {
+      "id": "I007",
+      "listing_id": "L011",
+      "field": "step_free_access",
+      "observed_value": true,
+      "status": "confirmed",
+      "observed_at": "2026-11-10T12:00:00+09:00",
+      "notes": "시연용 확인 결과: 1층으로 도로에서 세대까지 계단 없이 접근 가능."
+    },
+    {
+      "id": "I008",
+      "listing_id": "L013",
+      "field": "elevator",
+      "observed_value": null,
+      "status": "unverified",
+      "observed_at": null,
+      "notes": "엘리베이터 설치 여부 확인 전. false로 바꾸거나 설치됐다고 추정하지 않습니다."
+    },
+    {
+      "id": "I009",
+      "listing_id": "L018",
+      "field": "step_free_access",
+      "observed_value": null,
+      "status": "unverified",
+      "observed_at": null,
+      "notes": "입주일 조건과 별도로 접근성 현장 확인이 필요한 가상 항목."
+    },
+    {
+      "id": "I010",
+      "listing_id": "L019",
+      "field": "step_free_access",
+      "observed_value": true,
+      "status": "confirmed",
+      "observed_at": "2026-11-11T11:00:00+09:00",
+      "notes": "시연용 대안 후보: 모든 연결 구간 무단차 확인."
+    },
+    {
+      "id": "I011",
+      "listing_id": "L020",
+      "field": "entry_steps",
+      "observed_value": 3,
+      "status": "confirmed",
+      "observed_at": "2026-11-10T17:00:00+09:00",
+      "notes": "시연용 확인 결과: 출입구 3계단, 우회 경로 없음."
+    }
+  ]
+}

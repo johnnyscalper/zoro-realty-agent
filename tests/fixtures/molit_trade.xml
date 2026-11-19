@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Entirely synthetic fixture; not downloaded transaction records. -->
+<response><header><resultCode>000</resultCode><resultMsg>OK</resultMsg></header><body>
+<items><item><aptNm>가상 샘플아파트</aptNm><umdNm>역삼동</umdNm><sggCd>11680</sggCd>
+<dealYear>2026</dealYear><dealMonth>10</dealMonth><dealDay>8</dealDay><dealAmount>123,456</dealAmount>
+<excluUseAr>84.95</excluUseAr><floor>12</floor><buildYear>2011</buildYear><cdealType/><cdealDay/>
+</item><item><aptNm>가상 취소아파트</aptNm><umdNm>논현동</umdNm><sggCd>11680</sggCd>
+<dealYear>2026</dealYear><dealMonth>10</dealMonth><dealDay>10</dealDay><dealAmount>90,000</dealAmount>
+<excluUseAr>59.8</excluUseAr><floor>3</floor><buildYear>2009</buildYear><cdealType>O</cdealType><cdealDay>26.10.15</cdealDay>
+</item></items><numOfRows>20</numOfRows><pageNo>1</pageNo><totalCount>2</totalCount>
+</body></response>

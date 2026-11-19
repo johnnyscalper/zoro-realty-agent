@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Entirely synthetic fixture; not downloaded transaction records. -->
+<response><header><resultCode>00</resultCode><resultMsg>NORMAL SERVICE.</resultMsg></header><body>
+<items><item><aptNm>가상 전세아파트</aptNm><umdNm>대치동</umdNm><sggCd>11680</sggCd>
+<dealYear>2026</dealYear><dealMonth>10</dealMonth><dealDay>2</dealDay><deposit>80,000</deposit><monthlyRent>0</monthlyRent>
+<excluUseAr>84.5</excluUseAr><floor>7</floor><buildYear>2015</buildYear></item>
+<item><aptNm>가상 월세아파트</aptNm><umdNm>청담동</umdNm><sggCd>11680</sggCd>
+<dealYear>2026</dealYear><dealMonth>10</dealMonth><dealDay>3</dealDay><deposit>10,000</deposit><monthlyRent>150</monthlyRent>
+<excluUseAr>59.95</excluUseAr><floor>5</floor><buildYear/></item></items>
+<numOfRows>20</numOfRows><pageNo>1</pageNo><totalCount>2</totalCount></body></response>

@@ -1,0 +1,74 @@
+{
+  "synthetic": true,
+  "date": "2026-11-25",
+  "notice": "업체·예약 시간 모두 가상입니다. 실제 예약 또는 업체 연락을 수행하지 않습니다.",
+  "events": [
+    {
+      "id": "ENTRY-01",
+      "type": "entry",
+      "start": "2026-11-25T08:30:00+09:00",
+      "end": "2026-11-25T09:00:00+09:00",
+      "status": "planned",
+      "depends_on": []
+    },
+    {
+      "id": "CLEAN-01",
+      "type": "cleaning",
+      "start": "2026-11-25T09:00:00+09:00",
+      "end": "2026-11-25T12:00:00+09:00",
+      "status": "planned",
+      "depends_on": [
+        "ENTRY-01"
+      ]
+    },
+    {
+      "id": "MOVE-01",
+      "type": "moving",
+      "start": "2026-11-25T13:00:00+09:00",
+      "end": "2026-11-25T16:00:00+09:00",
+      "status": "planned",
+      "depends_on": [
+        "CLEAN-01",
+        "ENTRY-01"
+      ]
+    }
+  ],
+  "provider_slots": [
+    {
+      "id": "SLOT-CLEAN-AM",
+      "type": "cleaning",
+      "start": "2026-11-25T09:00:00+09:00",
+      "end": "2026-11-25T12:00:00+09:00"
+    },
+    {
+      "id": "SLOT-CLEAN-PM",
+      "type": "cleaning",
+      "start": "2026-11-25T15:30:00+09:00",
+      "end": "2026-11-25T18:30:00+09:00"
+    },
+    {
+      "id": "SLOT-CLEAN-NEXT",
+      "type": "cleaning",
+      "start": "2026-11-26T09:00:00+09:00",
+      "end": "2026-11-26T12:00:00+09:00"
+    },
+    {
+      "id": "SLOT-MOVE-PM",
+      "type": "moving",
+      "start": "2026-11-25T13:00:00+09:00",
+      "end": "2026-11-25T16:00:00+09:00"
+    },
+    {
+      "id": "SLOT-MOVE-LATE",
+      "type": "moving",
+      "start": "2026-11-25T19:00:00+09:00",
+      "end": "2026-11-25T22:00:00+09:00"
+    },
+    {
+      "id": "SLOT-MOVE-NEXT",
+      "type": "moving",
+      "start": "2026-11-26T13:00:00+09:00",
+      "end": "2026-11-26T16:00:00+09:00"
+    }
+  ]
+}
