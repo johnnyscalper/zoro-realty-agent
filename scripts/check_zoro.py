@@ -39,14 +39,34 @@ CASES = (
     ("inspection_recheck", "현장에서 L001의 무계단 접근이 불가능한 것으로 확인했어. 이 확인 결과를 반영해줘.", "record_inspection"),
     ("entry_delay", "2026년 11월 25일 입주 가능 시각이 오후 3시로 늦어졌어. 입주 시각을 변경하고 청소와 이사 일정 대안을 찾아줘.", "set_entry_time"),
 )
+DIAGNOSTIC_FIELDS = ("stage", "attempted_tool", "call_count", "batch_tools", "argument_shape",
+                     "retry_after", "initial_batch", "initial_shape")
 
 
 def trace_summary(state):
     turn = state["agent"]["turns"][-1]
     # These values are generated/validated by our server. Do not export model
     # prose, raw requests, settings, inspection notes or raw HTTP errors.
-    return {"status": turn["status"], "zoro_used": turn["zoro_used"],
-            "tools": [row["tool"] for row in turn["trace"]]}
+    summary = {"status": turn["status"], "zoro_used": turn["zoro_used"],
+               "tools": [row["tool"] for row in turn["trace"]]}
+    if turn["trace"] and turn["trace"][-1]["tool"] == "error":
+        observation = turn["trace"][-1]["observation"]
+        summary["error"] = {key: observation[key] for key in ("code", *DIAGNOSTIC_FIELDS)
+                            if key in observation}
+    return summary
+
+
+def print_failure(record):
+    error = next((turn["error"] for turn in record["turns"] if "error" in turn), {})
+    if error:
+        record["failure_code"] = error["code"]
+    elif any(turn["status"] == "limit_reached" for turn in record["turns"]):
+        record["failure_code"] = "ACTION_LIMIT"
+    code = record.setdefault("failure_code", "EXPECTED_RESULT_MISSING")
+    steps = [name for turn in record["turns"] for name in turn["tools"]]
+    fields = [code, *[f"{key}={error[key]}" for key in DIAGNOSTIC_FIELDS if key in error],
+              "steps=" + (">".join(steps) or "none")]
+    print(f"DIAG {record['case']} | " + " | ".join(fields), flush=True)
 
 
 async def run_checks(settings, *, provider=None):
@@ -81,7 +101,7 @@ async def run_checks(settings, *, provider=None):
                 record["turns"].append(trace_summary(state))
                 if mutation:
                     pending = state["agent"]["pending"]
-                    unchanged = all(state[field] == before[field] for field in ("conditions", "listings", "schedule"))
+                    unchanged = all(state[field] == before[field] for field in ("conditions", "listings", "schedule", "inspections"))
                     pending_ok = bool(pending and pending["tool"] == mutation and unchanged)
                     if pending_ok and mutation == "record_inspection":
                         a = pending["arguments"]
@@ -93,6 +113,7 @@ async def run_checks(settings, *, provider=None):
                     # The script approves only this exact test-case change in
                     # its disposable synthetic DB, never a user's real session.
                     if not pending_ok:
+                        record["failure_code"] = "UNEXPECTED_CONFIRMATION" if pending else "MISSING_CONFIRMATION"
                         raise ValueError("Expected approval card missing")
                     state = await service.confirm(state["session_id"], {
                         "expected_revision": state["revision"], "request_id": str(uuid4()),
@@ -105,19 +126,46 @@ async def run_checks(settings, *, provider=None):
                 elif case == "inspection_recheck":
                     listing = next(row for row in state["listings"] if row["id"] == "L001")
                     excluded = {row["listing"]["id"] for row in (state["search_result"] or {}).get("excluded", [])}
-                    outcome = listing["step_free_access"] is False and "L001" in excluded
+                    new_inspections = state["inspections"][len(before["inspections"]):]
+                    record["evidence"] = {
+                        "one_confirmed_observation": len(new_inspections) == 1 and
+                            new_inspections[0]["listing_id"] == "L001" and
+                            new_inspections[0]["field"] == "step_free_access" and
+                            new_inspections[0]["observed_value"] is False and
+                            new_inspections[0]["status"] == "confirmed",
+                        "listing_updated": listing["step_free_access"] is False,
+                        "candidate_excluded": "L001" in excluded,
+                    }
+                    outcome = all(record["evidence"].values())
                 else:
                     if not state["schedule_proposals"] and state["agent"]["turns"][-1]["status"] == "completed":
                         state = await service.chat(state["session_id"], chat_payload(state, "변경된 입주 시각에 맞는 청소·이사 일정 대안을 제시해줘."), molit_fetcher=forbid_molit)
                         record["turns"].append(trace_summary(state))
-                    outcome = bool(state["schedule"]["conflicts"] and state["schedule_proposals"])
+                    events = state["schedule"]["events"]
+                    entry = next(event for event in events if event["type"] == "entry")
+                    record["evidence"] = {
+                        "entry_time_updated": datetime.fromisoformat(entry["end"]) == expected,
+                        "conflicts_detected": bool(state["schedule"]["conflicts"]),
+                        "alternatives_present": bool(state["schedule_proposals"]),
+                        "other_events_unchanged": [e for e in events if e["type"] != "entry"] ==
+                            [e for e in before["schedule"]["events"] if e["type"] != "entry"],
+                    }
+                    outcome = all(record["evidence"].values())
                 clean = all(turn["status"] not in {"error", "limit_reached"} for turn in record["turns"])
+                if state["agent"]["pending"] is not None:
+                    # Every requested write in these fixtures has already been reviewed.
+                    # A leftover approval card means the full flow is still incomplete.
+                    clean = False
+                    record["failure_code"] = "UNRESOLVED_CONFIRMATION"
                 record["passed"] = bool(outcome and clean and any(t["zoro_used"] for t in record["turns"]))
             except Exception:
+                record.setdefault("failure_code", "CHECK_EXCEPTION")
                 record["failure"] = "Expected agent behavior was not completed; inspect the app's action trace."
             record["elapsed_seconds"] = round(perf_counter() - begin, 3)
             results.append(record)
             print(f"{case}: {'PASS' if record['passed'] else 'FAIL'} ({record['elapsed_seconds']}s)", flush=True)
+            if not record["passed"]:
+                print_failure(record)
     return results
 
 
@@ -127,13 +175,13 @@ def main():
         if not settings.zoro_base_url or not settings.zoro_model:
             print("Configure Zoro first with CONFIGURE_ZORO_WINDOWS.cmd. No network test was run.")
             return 1
-        print("This contacts your configured model server and uses GPU time. Fixtures and approvals are synthetic.", flush=True)
+        print("Zoro live check 5. This contacts your model server. Fixtures and approvals are synthetic.", flush=True)
         ids = discover_models(settings.zoro_base_url, settings.zoro_api_key)
         if settings.zoro_model not in ids:
             print("Configured model ID differs from the server. Run CONFIGURE_ZORO_WINDOWS.cmd again.")
             return 1
         results = asyncio.run(run_checks(settings))
-        report = {"app_version": __version__, "checked_at": datetime.now(timezone.utc).isoformat(),
+        report = {"app_version": __version__, "check_revision": 5, "checked_at": datetime.now(timezone.utc).isoformat(),
                   "test_type": "live_configured_endpoint_synthetic_agent_flow", "data": "synthetic",
                   "model_identity": "self_reported_by_configured_endpoint_not_independently_attested",
                   "model_id_sha256": hashlib.sha256(settings.zoro_model.encode()).hexdigest(),

@@ -338,6 +338,34 @@ def _conditions(message: str) -> dict | None:
     return _decision("update_conditions", {"conditions": conditions}, "명시된 조건만 변경하도록 검토를 요청합니다. 나머지 조건은 유지합니다.")
 
 
+_INSPECTION_FIELDS = {"step_free_access": _ACCESS, "elevator": _ELEVATOR,
+                      "entry_steps": r"계단\s*(?:수|개수)|계단\s*\d+\s*개",
+                      "noise_level": r"소음|조용|시끄러"}
+
+
+def inspection_fields(message: str) -> list[str]:
+    return [field for field, pattern in _INSPECTION_FIELDS.items() if _has(pattern, message)]
+
+
+# This deliberately small vocabulary only recognizes an affirmative request
+# to record one observation. Any remaining text keeps the full decision loop.
+_REPORT_WORDS = re.compile(
+    r"[\s.,!·]+|현장에서|현장|방금|오늘|직접|제가|매물|아파트|전체|경로|접근|이용|수준|"
+    r"불가능|가능|불가|있음|없음|있어|없어|높음|낮음|보통|[0-9]+\s*개|"
+    r"것으로|걸로|사실|확인|결과|내용|기록|반영|저장|등록|정정|"
+    r"했습니다|했어요|했어|해주세요|해줘요|해줘|주세요|해|하다고|하다는|한|함|"
+    r"으로|라고|로|해당|에서|에|이|그|가|의|은|는|을|를|만"
+)
+
+
+def only_record_requested(message: str, listing_id: str, field: str) -> bool:
+    if not re.search(r"(?:기록|반영|저장|등록|정정)\s*해", message):
+        return False
+    text, id_count = re.subn(rf"(?<![a-z0-9]){re.escape(listing_id)}(?![a-z0-9])", " ", message, flags=re.I)
+    text, field_count = re.subn(_INSPECTION_FIELDS[field], " ", text, flags=re.I)
+    return bool(id_count and field_count and not _REPORT_WORDS.sub("", text))
+
+
 def _listing_command(message: str, state: dict) -> dict | None:
     identifiers = list(dict.fromkeys(value.upper() for value in re.findall(r"(?<![A-Za-z0-9])L\d{3}(?!\d)", message, re.IGNORECASE)))
     if not identifiers:
@@ -362,15 +390,7 @@ def _listing_command(message: str, state: dict) -> dict | None:
         else:
             return _ask("변경할 상태를 거래 가능·계약 완료·확인 필요 중 하나로 명시해 주세요.")
         return _decision("set_listing_status", {"listing_id": listing_id, "status": status}, "명시된 가상 매물 상태 변경을 검토하도록 요청합니다.")
-    fields = []
-    if _has(_ACCESS, message):
-        fields.append("step_free_access")
-    if _has(_ELEVATOR, message):
-        fields.append("elevator")
-    if _has(r"계단\s*(?:수|개수)|계단\s*\d+\s*개", message):
-        fields.append("entry_steps")
-    if _has(r"소음|조용|시끄러", message):
-        fields.append("noise_level")
+    fields = inspection_fields(message)
     if not fields and _has(r"재검사|재검증|재검색|다시\s*(?:검색|검사)|조건.*(?:충족|맞)", message):
         return _search(state)
     if len(fields) != 1:

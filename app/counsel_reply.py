@@ -49,7 +49,7 @@ def completed_reply(trace: list[dict]) -> str:
             # Keep the server-authored ID and the explicit unverified status.
             paragraphs.append(entry["summary"])
         elif tool == "record_inspection":
-            paragraphs.append("직접 확인해 주신 현장 결과를 반영하고, 기존 후보가 조건에 맞는지 다시 확인했어요.")
+            paragraphs.append(entry["summary"])
         elif tool == "set_listing_status":
             paragraphs.append("가상 매물의 변경된 거래 상태를 반영하고, 기존 후보를 다시 확인했어요.")
         elif tool == "set_entry_time":

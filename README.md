@@ -4,8 +4,11 @@
 
 강남구 아파트 전세 상담을 예로, 고객의 조건을 구조화하고 필요한 도구를 실행한 뒤 결과를 설명합니다. 추천 이후에 조건이나 현장 정보가 바뀌어도 후보와 일정을 다시 검토합니다. 중요한 변경은 사용자가 승인한 뒤 반영합니다.
 
-**1차 공개본 · v0.4.3 · 2026-11-16**  
-Trillion Labs 해커톤 준비 프로젝트로, 현재는 GPU 없이 **개발용 규칙 모드**를 실행할 수 있습니다. Zoro 연결 어댑터와 설치·평가 도구를 포함하며, 실제 GPU에서 Zoro 추론은 아직 검증 전입니다.
+**Trillion Labs Track 1 · v0.4.3 · Check 5 · 2026-11-19**
+
+NVIDIA Brev L40S에 연결한 앱에서 후보 검색, 현장 재검증, 입주 지연 세 시나리오가 통과했습니다. 추천 매물과 업체 시간표, 테스트 승인은 가상 자료입니다.
+
+**[심사용 데모](submission/demo/README.md)** · [실행 로그 3종](submission/README.md) · [5분 발표 원고](docs/TRACK1_TALK_KO.md)
 
 [3분 시연과 프로젝트 소개](docs/SHOWCASE.md) · [Windows 실행 안내](START_HERE_KO.md) · [검증 기록](docs/VERIFICATION_V043.md) · [Zoro 연결 준비](docs/ZORO_GPU_QUICKSTART.md)
 
@@ -97,7 +100,7 @@ Python 3.11 이상이 필요합니다. Windows는 `START_WINDOWS.cmd`, macOS/Lin
 | STATE_DB_PATH | 선택: 상담 DB 경로 |
 | APP_HOST / APP_PORT | 기본 127.0.0.1 / 8000 |
 
-현재 Zoro 어댑터는 **OpenAI Chat Completions 경로**를 사용합니다. v0.4.1에서 공식 decision/chat 서버 소스를 확인하고 행동 선택 요청에 `enable_thinking=false`, `temperature=0`을 지정했습니다. 실제 GPU에서의 호환·행동 정확도·속도는 아직 검증하지 않았습니다. 모델 오류를 개발 모드로 자동 대체하지 않습니다. 구체적인 설치와 연결 순서는 [ZORO_GPU_QUICKSTART.md](docs/ZORO_GPU_QUICKSTART.md)에 있습니다.
+현재 Zoro 어댑터는 **OpenAI Chat Completions 경로**를 사용합니다. v0.4.1에서 공식 decision/chat 서버 소스를 확인하고 행동 선택 요청에 `enable_thinking=false`, `temperature=0`을 지정했습니다. 행사 L40S에서 측정한 세 시나리오의 동작과 소요 시간은 [Check 5 기록](submission/README.md)에서 볼 수 있습니다. 모델 오류를 개발 모드로 자동 대체하지 않습니다. 구체적인 설치와 연결 순서는 [ZORO_GPU_QUICKSTART.md](docs/ZORO_GPU_QUICKSTART.md)에 있습니다.
 
 ## 구조와 검사
 

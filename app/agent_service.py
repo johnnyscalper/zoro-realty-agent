@@ -19,6 +19,7 @@ from app.molit import MolitError
 from app.scheduling import ScheduleError
 from app.store import StateError
 from app.tools import ToolService
+from app.zoro_provider import PROVIDER_CODES, ProviderError
 
 
 MAX_STEPS = 6
@@ -95,6 +96,22 @@ def review_summary(tool, args, state):
             raise AgentError("STALE_PROPOSAL", "현재 상태의 일정 대안을 다시 계산해 주세요.", 409)
         return f"{proposal['summary']} — 내부 일정표에만 반영하며 업체 예약·연락은 하지 않습니다."
     return DESCRIPTIONS[tool]
+
+
+def additional_inspection_requested(args, reviewed, message, listings):
+    """A second observation needs a new target grounded in this user's request."""
+    from app.dev_planner import inspection_fields
+
+    listing_id, field = args["listing_id"], args["field"]
+    if [listing_id, field] in reviewed:
+        return False
+    known_listings, known_fields = zip(*reviewed)
+    if listing_id not in known_listings:
+        name = next((row["name"] for row in listings if row["id"] == listing_id), "")
+        named_id = re.search(rf"(?<![a-z0-9]){re.escape(listing_id)}(?![a-z0-9])", message, re.I)
+        if not named_id and not (name and name in message):
+            return False
+    return field in known_fields or field in inspection_fields(message) or field in message.casefold()
 
 
 class ChatService:
@@ -219,8 +236,16 @@ class ChatService:
             if task is None:
                 saved = svc.request_verification(sid, revision, args["listing_id"], args["field"])
                 task = next(t for t in saved["verification_tasks"] if t["listing_id"] == args["listing_id"] and t["field"] == args["field"] and t["status"] == "pending")
-            svc.confirm_inspection(sid, working.state["revision"], task["id"], args["value"], args.get("notes", ""))
-            return {"listing_id": args["listing_id"], "field": args["field"], "value": args["value"], "source": "user_confirmed_demo"}, "사용자가 확인한 항목만 반영하고 기존 후보를 재검증했습니다."
+            saved = svc.confirm_inspection(sid, working.state["revision"], task["id"], args["value"], args.get("notes", ""))
+            result = saved["search_result"] or {}
+            buckets = {"eligible": "조건을 충족하는 후보", "needs_verification": "추가 확인이 필요한 후보", "excluded": "제외된 후보"}
+            bucket = next((key for key in buckets if any(row["listing"]["id"] == args["listing_id"]
+                           for row in result.get(key, []))), None)
+            summary = f"{args['listing_id']}의 현장 확인 결과를 기록했어요."
+            if bucket is not None:
+                summary += f" 현재 조건으로 다시 확인한 결과, 이 매물은 {buckets[bucket]}예요."
+            return {"listing_id": args["listing_id"], "field": args["field"], "value": args["value"],
+                    "candidate_bucket": bucket, "source": "user_confirmed_demo"}, summary
         if tool == "set_listing_status":
             svc.change_status(sid, revision, args["listing_id"], args["status"])
             return {**args, "source": "synthetic"}, "가상 매물 상태를 변경하고 기존 후보를 재검증했습니다."
@@ -241,6 +266,10 @@ class ChatService:
     @staticmethod
     def _safe_failure(exc):
         code = getattr(exc, "code", "")
+        if isinstance(exc, ProviderError) and code in PROVIDER_CODES:
+            return code, "Zoro 응답을 처리하지 못했습니다. 행동 기록에서 오류 코드를 확인해 주세요."
+        if isinstance(exc, AgentError) and code == "REPEATED_ACTION":
+            return code, "같은 행동이 반복되어 이번 요청의 변경을 반영하지 않았습니다."
         if code == "INVALID_DECISION":
             return code, "허용된 행동 형식을 확인하지 못해 이번 요청의 변경을 반영하지 않았습니다."
         if code == "SENSITIVE_INPUT":
@@ -254,10 +283,15 @@ class ChatService:
         return "AGENT_EXECUTION_FAILED", "에이전트 응답 또는 도구 실행을 완료하지 못했습니다. 이번 요청의 변경은 반영하지 않았습니다."
 
     async def _turn(self, state, agent, payload, fingerprint, message, *, molit_fetcher, approval=None):
+        from app.dev_planner import only_record_requested
+
         working = WorkingStore(state)
         trace, seen = [], set()
+        verified_search_revision = None
+        reviewed_inspections = list(approval.get("reviewed_inspections", [])) if approval else []
         mode, data_mode = payload["mode"], payload["data_mode"]
         status, reply, zoro_used = "completed", "", False
+        active_tool = None
         user_text = message if approval is None else "제안한 변경을 확인하고 반영합니다." if approval else "제안한 변경을 취소합니다."
         agent["messages"].append({"id": str(uuid4()), "role": "user", "text": user_text, "created_at": now()})
         try:
@@ -267,11 +301,23 @@ class ChatService:
                 else:
                     if approval:
                         decision = validate_decision({key: approval[key] for key in ("tool", "arguments")})
+                        active_tool = decision["tool"]
                         self._sensitive(decision, key_patterns=True)
                         observation, summary = await self._execute(working, decision, data_mode=data_mode, molit_fetcher=molit_fetcher)
                         trace.append({**decision, "status": "executed", "summary": summary, "observation": observation})
+                        if active_tool == "record_inspection":
+                            reviewed_inspections.append([observation["listing_id"], observation["field"]])
+                            if (observation["candidate_bucket"] and not working.state["search_stale"]
+                                    and working.state["search_result"]["status"] == "ready"
+                                    and only_record_requested(message, observation["listing_id"], observation["field"])):
+                                # The approved fact and the reclassified candidate are
+                                # in the same snapshot. The CAS below commits them together.
+                                reply = summary
                     final_approval = bool(approval) and len(agent["requests"]) >= MAX_REQUESTS - 1
                     for _ in range(0 if final_approval else MAX_STEPS - len(trace)):
+                        if reply:
+                            break
+                        active_tool = None
                         context = {**working.state, "agent": deepcopy(agent)}
                         # Manual tools and restored sessions also feed this context.
                         # The provider knows its own key, but not MOLIT credentials.
@@ -283,8 +329,33 @@ class ChatService:
                         self._sensitive(raw, key_patterns=True)
                         decision = validate_decision(raw)
                         tool, args = decision["tool"], decision["arguments"]
+                        active_tool = tool
+                        # The user's click approves one saved fact. Keep the real
+                        # result when the model asks to record it again or adds
+                        # an observation that the user never supplied.
+                        if tool == "record_inspection" and reviewed_inspections and not additional_inspection_requested(
+                                args, reviewed_inspections, message, working.state["listings"]):
+                            break
+                        if tool == "apply_schedule":
+                            if approval and approval["tool"] == tool and approval["arguments"] == args:
+                                break
+                            freshly_planned = any(item["tool"] == "propose_schedule" for item in trace)
+                            if freshly_planned:
+                                # A fresh user message can refer to an option already
+                                # displayed. A reviewed mutation invalidates old options.
+                                already_shown = not approval and any(
+                                    p["id"] == args["proposal_id"] and p["based_on_revision"] == state["revision"]
+                                    for p in state["schedule_proposals"]
+                                )
+                                if not already_shown:
+                                    break
                         signature = json.dumps([tool, args], sort_keys=True, ensure_ascii=False)
                         if signature in seen:
+                            # In a longer inspection request Zoro can ask for a
+                            # separate search. A second lookup on the same verified
+                            # snapshot can return the first result without running it again.
+                            if tool == "search_candidates" and verified_search_revision == working.state["revision"]:
+                                break
                             raise AgentError("REPEATED_ACTION", "같은 행동을 반복해 중단했습니다.")
                         seen.add(signature)
                         if tool == "ask_user":
@@ -305,12 +376,17 @@ class ChatService:
                             agent["pending"] = {"id": str(uuid4()), "tool": tool, "arguments": args, "summary": summary,
                                                 "created_revision": state["revision"] + 1, "message": message,
                                                 "mode": mode, "data_mode": data_mode}
+                            if reviewed_inspections:
+                                agent["pending"]["reviewed_inspections"] = reviewed_inspections
                             trace.append({**decision, "status": "pending_confirmation", "summary": summary, "observation": {}})
                             reply, status = confirmation_reply(summary), "awaiting_confirmation"
                             break
                         observation, summary = await self._execute(working, decision, data_mode=data_mode, molit_fetcher=molit_fetcher)
                         self._sensitive(observation)
                         trace.append({**decision, "status": "executed", "summary": summary, "observation": observation})
+                        if (tool == "search_candidates" and approval and approval["tool"] == "record_inspection"
+                                and observation["status"] == "ready"):
+                            verified_search_revision = working.state["revision"]
                     else:
                         if final_approval:
                             reply = trace[-1]["summary"] + " 이 상담의 대화 한도에 도달했습니다. 새 상담에서 계속해 주세요."
@@ -330,7 +406,12 @@ class ChatService:
             for item in trace:
                 item["status"] = "rolled_back"
                 item["summary"] = "후속 처리 실패로 이번 요청의 상태 변경을 반영하지 않았습니다."
-            trace.append({"tool": "error", "arguments": {}, "status": "error", "summary": reply, "observation": {"code": code}})
+            observation = {"code": code}
+            if isinstance(exc, ProviderError) and code in PROVIDER_CODES:
+                observation.update(exc.diagnostics)
+            elif active_tool is not None:
+                observation["attempted_tool"] = active_tool
+            trace.append({"tool": "error", "arguments": {}, "status": "error", "summary": reply, "observation": observation})
             trace = trace[-MAX_STEPS:]
         if not reply:
             reply = completed_reply(trace)

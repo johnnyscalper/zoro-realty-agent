@@ -522,6 +522,170 @@ def test_chat_proposals_survive_review_revision_and_apply_only_after_confirm(app
     assert saved["schedule_proposals"] == []
 
 
+@pytest.mark.parametrize("extra", [
+    {"listing_id": "L001", "field": "step_free_access", "value": False, "notes": "표현이 달라진 메모"},
+    {"listing_id": "L001", "field": "step_free_access", "value": True},
+    {"listing_id": "L001", "field": "elevator", "value": False},
+    {"listing_id": "L009", "field": "step_free_access", "value": False},
+])
+def test_one_report_records_one_fact_and_returns_actual_candidate_bucket(app, client, extra):
+    before = new_session(client)
+    search = client.post(path(before, "/search"), json={"expected_revision": before["revision"]})
+    assert search.status_code == 200
+    before = search.json()
+    observation = {"listing_id": "L001", "field": "step_free_access", "value": False}
+    app.state.agent_service.provider = Decisions(decision("record_inspection", observation),
+                                                decision("record_inspection", extra))
+    pending = chat(client, before, mode="zoro", message="L001의 무단차 접근 불가를 기록하고 후보도 다시 검토해줘.")
+    assert business(pending) == business(before)
+    saved = confirm(client, pending)
+    assert saved["agent"]["pending"] is None
+    assert len(saved["inspections"]) == len(before["inspections"]) + 1
+    assert saved["inspections"][-1]["observed_value"] is False
+    assert listing(saved)["step_free_access"] is False
+    assert any(row["listing"]["id"] == "L001" for row in saved["search_result"]["excluded"])
+    turn = saved["agent"]["turns"][-1]
+    assert turn["status"] == "completed" and turn["zoro_used"]
+    assert [(row["tool"], row["status"]) for row in turn["trace"]] == [("record_inspection", "executed")]
+    assert turn["trace"][0]["observation"]["candidate_bucket"] == "excluded"
+    assert "L001" in turn["reply"] and "제외" in turn["reply"]
+
+
+@pytest.mark.parametrize("listing_id,field,value,message", [
+    ("L001", "step_free_access", False, "현장에서 L001의 무계단 접근이 불가능한 것으로 확인했어. 이 확인 결과를 반영해줘."),
+    ("L009", "elevator", False, "L009에 엘리베이터 없음. 기록해줘."),
+    ("L004", "noise_level", "low", "L004 현장 소음은 낮음으로 확인했어요. 저장해 주세요."),
+])
+def test_single_approved_report_returns_persisted_classification_without_more_inference(app, client, listing_id, field, value, message):
+    before = new_session(client)
+    result = client.post(path(before, "/search"), json={"expected_revision": before["revision"]})
+    assert result.status_code == 200, result.text
+    before = result.json()
+    fact = {"listing_id": listing_id, "field": field, "value": value}
+    provider = Decisions(decision("record_inspection", fact), RuntimeError("unexpected post-confirmation inference"))
+    app.state.agent_service.provider = provider
+    pending = chat(client, before, mode="zoro", message=message)
+    assert pending["agent"]["pending"]["arguments"] == fact and business(pending) == business(before)
+    assert pending["agent"]["turns"][-1]["zoro_used"]
+    saved = confirm(client, pending)
+    turn = saved["agent"]["turns"][-1]
+    assert turn["status"] == "completed" and not turn["zoro_used"] and len(provider.calls) == 1
+    assert saved["agent"]["pending"] is None and not saved["search_stale"]
+    bucket = turn["trace"][0]["observation"]["candidate_bucket"]
+    assert [entry["tool"] for entry in turn["trace"]] == ["record_inspection"]
+    assert listing(saved, listing_id)[field] == value
+    assert any(row["listing"]["id"] == listing_id for row in saved["search_result"][bucket])
+    assert len(saved["inspections"]) == len(before["inspections"]) + 1
+    assert listing_id in turn["reply"]
+
+
+@pytest.mark.parametrize("has_previous_search", [True, False])
+def test_repeated_recheck_reuses_one_successful_search_after_inspection(app, client, has_previous_search):
+    before = new_session(client)
+    if has_previous_search:
+        result = client.post(path(before, "/search"), json={"expected_revision": before["revision"]})
+        assert result.status_code == 200
+        before = result.json()
+    fact = {"listing_id": "L001", "field": "step_free_access", "value": False}
+    app.state.agent_service.provider = Decisions(decision("record_inspection", fact),
+                                                decision("search_candidates"), decision("search_candidates"))
+    pending = chat(client, before, mode="zoro", message="L001 무단차 접근 불가를 기록하고 후보 명단도 다시 검색해줘.")
+    saved = confirm(client, pending)
+    turn = saved["agent"]["turns"][-1]
+    assert turn["status"] == "completed" and turn["zoro_used"]
+    assert [(item["tool"], item["status"]) for item in turn["trace"]] == [
+        ("record_inspection", "executed"), ("search_candidates", "executed")]
+    assert len(saved["inspections"]) == len(before["inspections"]) + 1
+    actions = [item["action"] for item in saved["audit"][len(before["audit"]):]]
+    assert actions.count("inspection_confirmed") == actions.count("candidates_searched") == 1
+    assert any(row["listing"]["id"] == "L001" for row in saved["search_result"]["excluded"])
+    assert saved["agent"]["pending"] is None and "후보" in turn["reply"]
+
+
+def test_compound_recheck_can_continue_to_requested_transaction_lookup(app, client):
+    before = new_session(client)
+    result = client.post(path(before, "/search"), json={"expected_revision": before["revision"]})
+    assert result.status_code == 200
+    before = result.json()
+    fact = {"listing_id": "L001", "field": "step_free_access", "value": False}
+    app.state.agent_service.provider = Decisions(
+        decision("record_inspection", fact), decision("search_candidates"),
+        decision("lookup_transactions", {"kind": "rent", "deal_ymd": "202610"}), decision())
+    review = chat(client, before, mode="zoro", message="L001의 무단차 접근 불가를 반영해줘. 후보 검색 후 2026년 10월 전월세 실거래도 알려줘.")
+    saved = confirm(client, review)
+    turn = saved["agent"]["turns"][-1]
+    assert turn["status"] == "completed" and turn["zoro_used"]
+    assert [item["tool"] for item in turn["trace"]] == ["record_inspection", "search_candidates", "lookup_transactions", "finish"]
+    assert turn["trace"][2]["observation"]["source"] == "sample"
+
+
+def test_incomplete_search_after_inspection_cannot_satisfy_duplicate(app, client):
+    result = client.post("/api/sessions", json={"conditions": {"hard": {}, "preferences": {}}})
+    assert result.status_code == 201, result.text
+    before = result.json()
+    fact = {"listing_id": "L001", "field": "elevator", "value": False}
+    app.state.agent_service.provider = Decisions(decision("record_inspection", fact),
+                                                decision("search_candidates"), decision("search_candidates"))
+    saved = confirm(client, chat(client, before, mode="zoro", message="L001의 엘리베이터 없음. 기록하고 후보를 확인해줘."))
+    turn = saved["agent"]["turns"][-1]
+    assert turn["status"] == "error" and turn["trace"][-1]["observation"]["code"] == "REPEATED_ACTION"
+    assert business(saved) == business(before)
+
+
+def test_distinct_reported_facts_have_separate_reviews_and_fresh_corrections_are_allowed(app, client):
+    before = new_session(client)
+    access = {"listing_id": "L001", "field": "step_free_access", "value": False}
+    lift = {"listing_id": "L001", "field": "elevator", "value": True}
+    app.state.agent_service.provider = Decisions(*(decision("record_inspection", args) for args in (access, lift, access)))
+    first = chat(client, before, mode="zoro", message="L001 현장은 무단차 접근이 불가능하고 엘리베이터는 있었어. 둘 다 반영해줘.")
+    second = confirm(client, first)
+    assert second["agent"]["pending"]["arguments"] == lift
+    assert len(second["inspections"]) == len(before["inspections"]) + 1
+    saved = confirm(client, second)
+    assert saved["agent"]["pending"] is None
+    assert [row["field"] for row in saved["inspections"][-2:]] == ["step_free_access", "elevator"]
+    assert saved["search_result"] is None and "다시 확인" not in saved["agent"]["turns"][-1]["reply"]
+    app.state.agent_service.provider = Decisions(decision("record_inspection", {**access, "value": True}))
+    correction = chat(client, saved, mode="zoro", message="L001을 다시 방문했어. 무단차 접근이 가능해. 정정해줘.")
+    assert correction["agent"]["pending"]["arguments"]["value"] is True
+    corrected = confirm(client, correction)
+    assert listing(corrected)["step_free_access"] is True
+
+
+def test_show_new_options_then_let_user_choose_a_different_one(app, client):
+    before = new_session(client)
+    entry_end = "2026-11-25T15:00:00+09:00"
+
+    class EagerProvider:
+        async def decide(self, message, state, trace):
+            if not trace:
+                return decision("set_entry_time", {"new_end": entry_end})
+            if trace[-1]["tool"] == "set_entry_time":
+                return decision("propose_schedule")
+            return decision("apply_schedule", {"proposal_id": state["schedule_proposals"][0]["id"]})
+
+    app.state.agent_service.provider = EagerProvider()
+    review = chat(client, before, mode="zoro", message="입주가 오후 3시로 지연됐어. 입주 시각을 바꾸고 이사 일정 대안을 보여줘.")
+    assert business(review) == business(before)
+    offered = confirm(client, review)
+    assert offered["agent"]["pending"] is None and offered["schedule"]["conflicts"]
+    turn = offered["agent"]["turns"][-1]
+    assert turn["status"] == "completed"
+    assert [e["tool"] for e in turn["trace"]] == ["set_entry_time", "propose_schedule"]
+    assert "선택" in turn["reply"] and str(len(offered["schedule_proposals"])) in turn["reply"]
+    assert [e for e in offered["schedule"]["events"] if e["type"] != "entry"] == [
+        e for e in before["schedule"]["events"] if e["type"] != "entry"]
+    selection = offered["schedule_proposals"][1]
+    apply = decision("apply_schedule", {"proposal_id": selection["id"]})
+    app.state.agent_service.provider = Decisions(apply, apply)
+    request = chat(client, offered, mode="zoro", message="두 번째 일정안을 적용해줘.")
+    assert request["agent"]["pending"]["arguments"]["proposal_id"] == selection["id"]
+    assert request["schedule"] == offered["schedule"]
+    result = confirm(client, request)
+    assert result["agent"]["pending"] is None
+    assert result["schedule"]["events"] == selection["events"] and result["schedule"]["conflicts"] == []
+
+
 def test_multi_step_turn_has_one_commit_and_consistent_audit_revisions(app, client):
     before = new_session(client)
     app.state.agent_service.planner = Decisions(

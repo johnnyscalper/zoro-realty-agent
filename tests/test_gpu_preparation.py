@@ -4,6 +4,7 @@ from copy import deepcopy
 import json
 from pathlib import Path
 import sys
+from types import ModuleType
 
 import httpx
 import pytest
@@ -81,7 +82,6 @@ class ScriptedProvider:
     def __init__(self, wrong_inspection=False):
         self.steps = [action("search_candidates"), action("finish"),
                       action("record_inspection", {"listing_id": "L001", "field": "step_free_access", "value": wrong_inspection}),
-                      *([] if wrong_inspection else [action("finish")]),
                       action("set_entry_time", {"new_end": "2026-11-25T15:00:00+09:00"}),
                       action("propose_schedule"), action("finish")]
         self.calls = []
@@ -101,6 +101,8 @@ def test_live_check_harness_runs_real_business_tools_with_fake_inference(tmp_pat
     results = asyncio.run(run_checks(settings, provider=fake))
     assert len(results) == 3 and all(row["passed"] for row in results)
     assert results[1]["approval_checked"] and results[2]["approval_checked"]
+    assert [turn["zoro_used"] for turn in results[1]["turns"]] == [True, False]
+    assert all(results[1]["evidence"].values())
     assert original_db.read_bytes() == b"do-not-touch-user-state"
     assert not fake.steps
 
@@ -134,6 +136,37 @@ def test_gpu_preflight_rejects_windows_before_installing(tmp_path, monkeypatch):
     monkeypatch.setattr(gpu_zoro.sys, "platform", "win32")
     with pytest.raises(RuntimeError, match="Linux"):
         gpu_zoro.preflight(tmp_path)
+
+
+@pytest.mark.parametrize("filename", ["decision_head.pt", "jev_head.pt", None])
+def test_gpu_download_records_a_snapshot_only_with_a_supported_head(tmp_path, monkeypatch, filename):
+    checkpoint = tmp_path / "snapshots" / ("a" * 40)
+    checkpoint.mkdir(parents=True)
+    if filename:
+        (checkpoint / filename).touch()
+
+    hub = ModuleType("huggingface_hub")
+    requested_revisions = []
+
+    def snapshot_download(model, revision):
+        assert model == gpu_zoro.MODEL
+        requested_revisions.append(revision)
+        return str(checkpoint)
+
+    hub.snapshot_download = snapshot_download
+    monkeypatch.setitem(sys.modules, "huggingface_hub", hub)
+    monkeypatch.setattr(sys, "argv", ["-c", str(tmp_path)])
+    marker = tmp_path / "model-snapshot.json"
+    if filename is None:
+        with pytest.raises(SystemExit) as error:
+            exec(gpu_zoro.DOWNLOAD, {})
+        assert error.value.code == 1 and not marker.exists()
+        return
+
+    exec(gpu_zoro.DOWNLOAD, {})
+    assert json.loads(marker.read_text())["path"] == str(checkpoint)
+    exec(gpu_zoro.DOWNLOAD, {})
+    assert requested_revisions == ["main", checkpoint.name]
 
 
 def test_action_request_disables_thinking_for_bounded_tool_output():

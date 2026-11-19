@@ -1,0 +1,87 @@
+{
+  "app_version": "0.4.3",
+  "check_revision": 5,
+  "checked_at": "2026-11-19T08:20:34.121803+00:00",
+  "test_type": "live_configured_endpoint_synthetic_agent_flow",
+  "data": "synthetic",
+  "model_identity": "self_reported_by_configured_endpoint_not_independently_attested",
+  "model_id_sha256": "c20975c4185cf14664142f8a448f4ebc992a23e0ff7288f6bce87b6fb86e787a",
+  "molit_live_test": false,
+  "production_database_used": false,
+  "cases_passed": 3,
+  "cases_total": 3,
+  "results": [
+    {
+      "case": "candidate_search",
+      "passed": true,
+      "turns": [
+        {
+          "status": "needs_input",
+          "zoro_used": true,
+          "tools": [
+            "search_candidates",
+            "ask_user"
+          ]
+        }
+      ],
+      "approval_checked": false,
+      "elapsed_seconds": 6.44
+    },
+    {
+      "case": "inspection_recheck",
+      "passed": true,
+      "turns": [
+        {
+          "status": "awaiting_confirmation",
+          "zoro_used": true,
+          "tools": [
+            "record_inspection"
+          ]
+        },
+        {
+          "status": "completed",
+          "zoro_used": false,
+          "tools": [
+            "record_inspection"
+          ]
+        }
+      ],
+      "approval_checked": true,
+      "evidence": {
+        "one_confirmed_observation": true,
+        "listing_updated": true,
+        "candidate_excluded": true
+      },
+      "elapsed_seconds": 4.103
+    },
+    {
+      "case": "entry_delay",
+      "passed": true,
+      "turns": [
+        {
+          "status": "awaiting_confirmation",
+          "zoro_used": true,
+          "tools": [
+            "set_entry_time"
+          ]
+        },
+        {
+          "status": "completed",
+          "zoro_used": true,
+          "tools": [
+            "set_entry_time",
+            "propose_schedule"
+          ]
+        }
+      ],
+      "approval_checked": true,
+      "evidence": {
+        "entry_time_updated": true,
+        "conflicts_detected": true,
+        "alternatives_present": true,
+        "other_events_unchanged": true
+      },
+      "elapsed_seconds": 10.42
+    }
+  ]
+}

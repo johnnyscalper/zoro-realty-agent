@@ -16,7 +16,7 @@ import urllib.request
 import venv
 
 REPOSITORY = "https://github.com/trillion-labs/trida-stack.git"
-REVISION = "3a7877868c63ff82af14f707a1018bc0baac0711"
+REVISION = "0ddcf516e458a82892d7fe0d0dabeb113d3cf424"
 MODEL = "trillionlabs/Zoro-1"
 SGLANG = "0.5.22"
 PORT = 30001
@@ -37,7 +37,7 @@ def preflight(runtime: Path, *, need_space=True):
     while not parent.exists():
         parent = parent.parent
     free_gib = shutil.disk_usage(parent).free / 1024**3
-    print(f"Filesystem free space: {free_gib:.1f} GiB. Also check the Vast disk quota.", flush=True)
+    print(f"Filesystem free space: {free_gib:.1f} GiB. Also check the GPU instance's disk quota.", flush=True)
     if need_space and free_gib < 35:
         raise RuntimeError("At least 35 GiB free is recommended before installation. Use about 80 GB allocated disk.")
 
@@ -87,7 +87,7 @@ try:
     previous = json.loads(marker.read_text()) if marker.exists() else {}
     checkpoint = snapshot_download("trillionlabs/Zoro-1", revision=previous.get("revision", "main"))
     path = pathlib.Path(checkpoint).resolve()
-    if not (path / "jev_head.pt").is_file():
+    if not any((path / name).is_file() for name in ("decision_head.pt", "jev_head.pt")):
         raise ValueError("decision head missing")
     marker.write_text(json.dumps({"model": "trillionlabs/Zoro-1", "revision": path.name, "path": str(path)}, indent=2))
 except Exception:
@@ -107,7 +107,7 @@ def start(runtime: Path):
     metadata = json.loads((runtime / "model-snapshot.json").read_text())
     script = runtime / "trida-stack" / "inference" / "zoro-1" / "serve_decide.py"
     print("Starting Zoro on GPU loopback 127.0.0.1:30001. Keep this terminal open.", flush=True)
-    print("On Windows, forward local port 30001 through your Vast SSH connection.", flush=True)
+    print("On your laptop, forward local port 30001 to port 30001 on this GPU through SSH.", flush=True)
     command = [str(python), str(script), metadata["path"], "--host", "127.0.0.1",
                "--port", str(PORT), "--context-length", "16384", "--mem-fraction", "0.8"]
     os.execve(str(python), command, env)
@@ -152,7 +152,7 @@ def main(argv=None):
         print("Step failed. Check the preceding installation output, access and GPU environment.", file=sys.stderr)
         return 1
     except KeyboardInterrupt:
-        print("Stopped. Stopping this process does not stop billing for the Vast instance.")
+        print("Stopped. This does not stop the cloud GPU instance or its billing.")
         return 130
 
 

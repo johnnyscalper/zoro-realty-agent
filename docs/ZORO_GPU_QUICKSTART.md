@@ -1,6 +1,21 @@
-# Vast GPU에서 Zoro를 연결하기 — v0.4.3 전체본
+# Brev 또는 Vast GPU에서 Zoro 연결하기
 
-기존 앱은 노트북에서, Zoro만 GPU 서버에서 실행합니다. 이번 파일은 **설치·연결·검사 준비본**입니다. 실제 GPU 설치·추론 성공은 아직 확인하지 않았습니다. 도우미는 임대·시작·정지·결제를 대신하지 않습니다.
+기존 앱은 노트북에서, Zoro만 GPU 서버에서 실행합니다. 행사 NVIDIA L40S에서 실행한 세 시나리오가 Check 5를 통과했습니다. [실행 로그와 데모](../submission/README.md) 도우미는 임대·시작·정지·결제를 대신하지 않습니다.
+
+## 행사에서 제공한 NVIDIA Brev L40S
+
+팀 조직의 **Compute**에서 배정된 L40S를 엽니다. 직접 만드는 경우 **Create a cloud instance**에서 **L40S × 1**과 시간당 요금을 확인합니다. 주최 측이 미리 모델 서버를 실행해 주었다면 제공된 접속 정보로 5단계의 앱 검사부터 진행합니다.
+
+새 인스턴스에서는 JupyterLab의 Terminal에서 `nvidia-smi`를 실행합니다. 아래 명령은 이 버전의 `gpu_zoro.py`를 JupyterLab에 업로드한 폴더에서 실행합니다. Python 3.11 또는 3.12를 사용합니다. 홈 디렉터리에 35GiB 이상의 사용 가능한 공간이 필요합니다. 다른 디스크를 쓴다면 모든 명령에 같은 경로를 지정합니다.
+
+```bash
+python3 gpu_zoro.py preflight --runtime-dir ~/zoro-brev-runtime
+python3 gpu_zoro.py setup --runtime-dir ~/zoro-brev-runtime
+python3 gpu_zoro.py login --runtime-dir ~/zoro-brev-runtime
+python3 gpu_zoro.py start --runtime-dir ~/zoro-brev-runtime
+```
+
+서버가 준비되면 다른 GPU 터미널에서 `python3 gpu_zoro.py status`로 모델 목록을 확인합니다. 노트북의 Brev CLI에서 로그인하고 행사 조직과 인스턴스를 선택한 뒤 `brev port-forward <인스턴스이름> --port 30001:30001`로 연결합니다. [NVIDIA 콘솔 안내](https://docs.nvidia.com/datascience/deployment/latest/cloud/nvidia/brev/) · [Brev 포트 연결](https://docs.nvidia.com/brev/cli/connectivity).
 
 ## 1. GPU를 켜기 전에
 
@@ -46,7 +61,7 @@ python3 scripts/gpu_zoro.py status
 ### 무엇을 설치하는가
 
 - 공식 저장소: https://github.com/trillion-labs/trida-stack
-- 확인한 소스 커밋: `3a7877868c63ff82af14f707a1018bc0baac0711`
+- 확인한 소스 커밋: `0ddcf516e458a82892d7fe0d0dabeb113d3cf424`. 배포 모델의 `decision_head.pt`와 이전 `jev_head.pt`를 모두 읽습니다.
 - 백엔드: 공식 문서의 stock SGLang 경로, `sglang==0.5.22`
 - 서버: `inference/zoro-1/serve_decide.py`, `127.0.0.1:30001`
 - 공식 모델: `trillionlabs/Zoro-1`. 첫 다운로드의 정확한 리비전을 기록하고 이후 같은 리비전을 재사용합니다.
@@ -95,9 +110,9 @@ ssh -p 실제SSH포트 -N -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 
 
 공식 행사는 2026-11-19(목) 13:00~11-20(금) 12:00입니다. 공개 안내에서 목요일 조기 제출·시연, 금요일 불참 시 심사·수상 자격은 확인되지 않았습니다. 주최 측에 해당 가능 여부와 영상/코드 대체 제출 방식을 확인한 뒤 맞춥니다. 그 전에도 모델 연결 테스트와 재현 가능한 코드 준비는 진행할 수 있습니다.
 
-공식 근거(2026-11-15 확인):
+공식 근거:
 
-- https://github.com/trillion-labs/trida-stack/blob/3a7877868c63ff82af14f707a1018bc0baac0711/inference/zoro-1/README.md
+- https://github.com/trillion-labs/trida-stack/blob/0ddcf516e458a82892d7fe0d0dabeb113d3cf424/inference/zoro-1/README.md
 - https://huggingface.co/trillionlabs/Zoro-1
 - https://docs.vast.ai/guides/instances/connect/ssh
 - https://docs.vast.ai/guides/reference/billing
