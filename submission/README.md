@@ -1,6 +1,6 @@
 # 집의 다음 · Track 1 제출 자료
 
-**[Google Slides 발표자료](https://docs.google.com/presentation/d/1VPpDth7YF2oiBI0g6eKCIF2ZDJQByB7qyvs8k9Aug9E/edit?slide=id.p1#slide=id.p1) · [실제 앱 녹화 · 1분 2초](https://drive.google.com/file/d/1glDUGIpctpFEOYttOO61-2cBdNl9vSQZ/view) · [앱 실행 및 프로젝트 소개](../README.md)**
+**[Google Slides 제출본 · 09_T1_조니realtorweb3](https://docs.google.com/presentation/d/1ge06XS_cBO2crv8nEHQoEx0n1otNqFqMfKS69D6gEyQ/edit?slide=id.p1#slide=id.p1) · [실제 앱 녹화 · 1분 2초](https://drive.google.com/file/d/1glDUGIpctpFEOYttOO61-2cBdNl9vSQZ/view) · [앱 실행 및 프로젝트 소개](../README.md)**
 
 행사 GPU 연결은 종료했습니다. 발표 8장의 녹화에서는 강남구 전세 조건으로 후보를 찾고 현장에서 무계단 출입이 불가능하다고 확인한 L001을 재검증합니다. 중개사가 변경을 승인한 뒤 화면 오른쪽에서 **확인 필요 3개 → 2개, 제외 11개 → 12개**로 바뀝니다. 마지막에는 앱의 **Zoro 서버 응답 사용** 기록이 보입니다. [시연에 사용한 앱 코드](../app) · [GPU 없는 Codespaces 체험](https://codespaces.new/johnnyscalper/zoro-realty-agent)
 
