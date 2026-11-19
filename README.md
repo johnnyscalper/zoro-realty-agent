@@ -2,7 +2,7 @@
 
 강남구 아파트 전세를 상담하는 중개사와 고객을 위한 앱입니다. 고객이 꼭 지켜야 할 조건을 정하면 후보를 추리고, 집을 본 뒤 새로 알게 된 사실이나 입주 시간 변경을 같은 상담에서 반영합니다.
 
-**[발표자료 9장](https://docs.google.com/presentation/d/1VPpDth7YF2oiBI0g6eKCIF2ZDJQByB7qyvs8k9Aug9E/edit?slide=id.p1#slide=id.p1) · [실제 앱 시연 녹화 · 1분 2초](https://drive.google.com/file/d/1glDUGIpctpFEOYttOO61-2cBdNl9vSQZ/view) · [실행 로그 3종](submission/README.md)**
+**[발표자료 9장 · 09_T1_조니realtorweb3](https://docs.google.com/presentation/d/1ge06XS_cBO2crv8nEHQoEx0n1otNqFqMfKS69D6gEyQ/edit?slide=id.p1#slide=id.p1) · [실제 앱 시연 녹화 · 1분 2초](https://drive.google.com/file/d/1glDUGIpctpFEOYttOO61-2cBdNl9vSQZ/view) · [실행 로그 3종](submission/README.md)**
 
 Trillion Labs Agent AI Hackathon 2026 · Track 1. 행사에서 NVIDIA Brev L40S로 Zoro-1을 실행했고, 현재 GPU 연결은 종료했습니다. **당시 Zoro가 도구를 선택한 장면은 녹화본에서, 같은 앱의 상담·승인·재검색은 GPU 없이 개발용 규칙 모드에서** 확인할 수 있습니다. 발표자료와 영상은 로그인 없이 볼 수 있습니다.
 
